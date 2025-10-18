@@ -90,17 +90,15 @@ class ResetPasswordScreen extends StatelessWidget {
                 const SizedBox(height: AppDimensions.spacingS),
 
                 // Description
-                Obx(
-                  () => Text(
-                    isForgotPassword
-                        ? 'Créez un nouveau mot de passe sécurisé pour ${controller.fullPhoneNumber}'
-                        : 'Entrez votre mot de passe actuel et votre nouveau mot de passe',
-                    style: GoogleFonts.montserrat(
-                      fontSize: AppDimensions.fontSizeXS,
-                      color: AppColors.textSecondary,
-                    ),
-                    textAlign: TextAlign.center,
+                Text(
+                  isForgotPassword
+                      ? 'Créez un nouveau mot de passe sécurisé pour ${controller.fullPhoneNumber}'
+                      : 'Entrez votre mot de passe actuel et votre nouveau mot de passe',
+                  style: GoogleFonts.montserrat(
+                    fontSize: AppDimensions.fontSizeXS,
+                    color: AppColors.textSecondary,
                   ),
+                  textAlign: TextAlign.center,
                 ),
 
                 const SizedBox(height: AppDimensions.spacingL),
