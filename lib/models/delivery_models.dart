@@ -111,8 +111,8 @@ class Colis {
       nomClient: json['nom_client'] ?? '',
       telephoneClient: json['telephone_client'] ?? '',
       adresseClient: json['adresse_client'] ?? '',
-      montantAEncaisse: json['montant_a_encaisse'] ?? 0,
-      prixDeVente: json['prix_de_vente'] ?? 0,
+      montantAEncaisse: _parseToInt(json['montant_a_encaisse']),
+      prixDeVente: _parseToInt(json['prix_de_vente']),
       numeroFacture: json['numero_facture'] ?? '',
       noteClient: json['note_client'] ?? '',
       instructionsLivraison: json['instructions_livraison'],
@@ -592,4 +592,18 @@ class DeliveryStatistiques {
       montantTotalEncaisse: json['montant_total_encaisse'] ?? 0,
     );
   }
+}
+
+/// Helper function to parse string or number to int
+int _parseToInt(dynamic value) {
+  if (value == null) return 0;
+  if (value is int) return value;
+  if (value is double) return value.toInt();
+  if (value is String) {
+    // Remove any non-numeric characters except decimal point
+    final cleanValue = value.replaceAll(RegExp(r'[^\d.-]'), '');
+    if (cleanValue.isEmpty) return 0;
+    return double.parse(cleanValue).toInt();
+  }
+  return 0;
 }
