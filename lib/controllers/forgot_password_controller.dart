@@ -8,6 +8,7 @@ import '../screens/login_screen.dart';
 import '../screens/otp_verification_screen.dart';
 import '../screens/reset_password_screen.dart';
 import '../constants/api_constants.dart';
+import '../services/local_notification_service.dart';
 import 'auth_controller.dart';
 
 class ForgotPasswordController extends GetxController {
@@ -384,16 +385,15 @@ class ForgotPasswordController extends GetxController {
       if (response.statusCode == 200 && responseData['success'] == true) {
         print('✅ Mot de passe changé avec succès');
 
-        Get.snackbar(
-          'Succès',
-          responseData['message'] ??
-              'Votre mot de passe a été changé avec succès',
-          snackPosition: SnackPosition.TOP,
-          backgroundColor: AppColors.snackbarSuccess,
-          colorText: Colors.white,
+        // Afficher une notification locale de succès
+        await LocalNotificationService().showSuccessNotification(
+          title: 'Mot de passe modifié',
+          message: responseData['message'] ?? 'Votre mot de passe a été changé avec succès',
+          payload: 'password_changed_success',
         );
 
-        // Retourner au profil
+        // Attendre un court délai puis retourner au profil
+        await Future.delayed(const Duration(milliseconds: 500));
         Get.back();
       } else {
         print('❌ Erreur lors du changement de mot de passe');
