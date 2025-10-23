@@ -50,7 +50,7 @@ void main() async {
 
   // Initialiser le service de notifications Firebase
   try {
-    await NotificationService.initialize();
+    // await NotificationService.initialize();
     print('✅ NotificationService initialisé avec succès');
   } catch (e) {
     print('❌ Erreur lors de l\'initialisation de NotificationService: $e');

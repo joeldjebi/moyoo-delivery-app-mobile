@@ -26,12 +26,6 @@ class RamassageService {
         headers: {..._defaultHeaders, 'Authorization': 'Bearer $token'},
       );
 
-      print('🔍 Service - Status Code: ${response.statusCode}');
-      print('🔍 Service - Response Body: ${response.body}');
-      print('🔍 Service - URL: $url');
-      print('🔍 Service - Headers: ${_defaultHeaders}');
-      print('🔍 Service - Token: $token');
-
       final responseData = jsonDecode(response.body);
 
       if (response.statusCode == 200) {

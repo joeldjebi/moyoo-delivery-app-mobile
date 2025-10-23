@@ -1,8 +1,6 @@
 import 'package:get/get.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import '../models/local_notification_models.dart';
 import 'local_notification_storage_service.dart';
-import 'local_notification_service.dart' as local_notification_service;
 
 /// Service de gestion centralisée des notifications
 class NotificationManagerService {
@@ -13,8 +11,6 @@ class NotificationManagerService {
 
   final LocalNotificationStorageService _storage =
       LocalNotificationStorageService.instance;
-  final local_notification_service.LocalNotificationService _localNotification =
-      local_notification_service.LocalNotificationService();
 
   // État réactif des notifications
   final RxList<LocalNotification> _notifications = <LocalNotification>[].obs;
@@ -39,97 +35,35 @@ class NotificationManagerService {
   /// Initialiser le service
   Future<void> initialize() async {
     try {
-      print('🔄 ===== INITIALISATION DU NOTIFICATIONMANAGER =====');
-
       // Charger les notifications stockées
       await _loadStoredNotifications();
 
       // Configurer les handlers Firebase
       _setupFirebaseHandlers();
-
-      print('✅ NotificationManager initialisé avec succès');
-    } catch (e) {
-      print('❌ Erreur lors de l\'initialisation du NotificationManager: $e');
-    }
+    } catch (e) {}
   }
 
   /// Charger les notifications stockées
   Future<void> _loadStoredNotifications() async {
     try {
-      print('📱 ===== CHARGEMENT DES NOTIFICATIONS STOCKÉES =====');
-      print('📱 Appel de _storage.getAllNotifications()...');
-
       final storedNotifications = await _storage.getAllNotifications();
-      print(
-        '📱 Notifications récupérées du stockage: ${storedNotifications.length}',
-      );
-      print(
-        '📱 IDs des notifications stockées: ${storedNotifications.map((n) => n.id).toList()}',
-      );
 
       _notifications.value = storedNotifications;
-      print(
-        '📱 Liste réactive mise à jour avec ${_notifications.length} notifications',
-      );
 
       // Mettre à jour les statistiques
       await _updateStats();
-      print('📱 Statistiques mises à jour');
-
-      print(
-        '📱 ✅ ${storedNotifications.length} notifications chargées avec succès',
-      );
-    } catch (e) {
-      print('❌ Erreur lors du chargement des notifications stockées: $e');
-    }
+    } catch (e) {}
   }
 
   /// Configurer les handlers Firebase
   void _setupFirebaseHandlers() {
-    print('🔄 Configuration des handlers Firebase...');
+    print(
+      '🔄 Configuration des handlers Firebase dans NotificationManagerService...',
+    );
 
-    // Message reçu au premier plan
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      print('📱 Message reçu au premier plan: ${message.notification?.title}');
-      _handleIncomingMessage(message);
-    });
-
-    // Message reçu en arrière-plan
-    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      print('📱 App ouverte par notification: ${message.notification?.title}');
-      _handleIncomingMessage(message);
-    });
-
-    print('✅ Handlers Firebase configurés');
-  }
-
-  /// Gérer un message entrant
-  Future<void> _handleIncomingMessage(RemoteMessage message) async {
-    try {
-      print('📱 ===== TRAITEMENT D\'UN MESSAGE ENTRANT =====');
-      print('📱 Titre: ${message.notification?.title}');
-      print('📱 Corps: ${message.notification?.body}');
-      print('📱 Data: ${message.data}');
-
-      // Créer la notification locale
-      final localNotification = LocalNotification.fromRemoteMessage(message);
-
-      // Sauvegarder localement
-      await _storage.saveNotification(localNotification);
-
-      // Mettre à jour la liste réactive
-      await _loadStoredNotifications();
-
-      // Afficher la notification native
-      await _localNotification.showInfoNotification(
-        title: localNotification.title,
-        message: localNotification.body,
-      );
-
-      print('✅ Message traité et sauvegardé');
-    } catch (e) {
-      print('❌ Erreur lors du traitement du message: $e');
-    }
+    // Note: Les handlers Firebase sont déjà configurés dans NotificationService
+    // pour éviter les conflits. Ce service se contente de gérer le stockage local.
+    print('✅ Handlers Firebase gérés par NotificationService');
   }
 
   /// Ajouter une notification manuelle
@@ -142,8 +76,6 @@ class NotificationManagerService {
     String? actionUrl,
   }) async {
     try {
-      print('📱 Ajout d\'une notification manuelle: $title');
-
       final notification = LocalNotification.create(
         title: title,
         body: body,
@@ -157,12 +89,10 @@ class NotificationManagerService {
 
       if (success) {
         await _loadStoredNotifications();
-        print('✅ Notification manuelle ajoutée');
       }
 
       return success;
     } catch (e) {
-      print('❌ Erreur lors de l\'ajout de la notification manuelle: $e');
       return false;
     }
   }
@@ -170,20 +100,16 @@ class NotificationManagerService {
   /// Marquer une notification comme lue
   Future<bool> markAsRead(String notificationId) async {
     try {
-      print('📱 Marquage de la notification $notificationId comme lue...');
-
       final success = await _storage.markAsRead(notificationId);
 
       if (success) {
         await _loadStoredNotifications();
         // Forcer la mise à jour de la liste réactive
         _notifications.refresh();
-        print('✅ Notification marquée comme lue');
       }
 
       return success;
     } catch (e) {
-      print('❌ Erreur lors du marquage de la notification: $e');
       return false;
     }
   }
@@ -191,20 +117,16 @@ class NotificationManagerService {
   /// Marquer une notification comme non lue
   Future<bool> markAsUnread(String notificationId) async {
     try {
-      print('📱 Marquage de la notification $notificationId comme non lue...');
-
       final success = await _storage.markAsUnread(notificationId);
 
       if (success) {
         await _loadStoredNotifications();
         // Forcer la mise à jour de la liste réactive
         _notifications.refresh();
-        print('✅ Notification marquée comme non lue');
       }
 
       return success;
     } catch (e) {
-      print('❌ Erreur lors du marquage de la notification: $e');
       return false;
     }
   }
@@ -212,18 +134,14 @@ class NotificationManagerService {
   /// Marquer toutes les notifications comme lues
   Future<bool> markAllAsRead() async {
     try {
-      print('📱 Marquage de toutes les notifications comme lues...');
-
       final success = await _storage.markAllAsRead();
 
       if (success) {
         await _loadStoredNotifications();
-        print('✅ Toutes les notifications marquées comme lues');
       }
 
       return success;
     } catch (e) {
-      print('❌ Erreur lors du marquage de toutes les notifications: $e');
       return false;
     }
   }
@@ -231,36 +149,20 @@ class NotificationManagerService {
   /// Supprimer une notification
   Future<bool> deleteNotification(String notificationId) async {
     try {
-      print('📱 Suppression de la notification $notificationId...');
-      print(
-        '📱 Nombre de notifications avant suppression: ${_notifications.length}',
-      );
-
       final success = await _storage.deleteNotification(notificationId);
-      print('📱 Résultat de la suppression dans le stockage: $success');
 
       if (success) {
         await _loadStoredNotifications();
-        print(
-          '📱 Nombre de notifications après rechargement: ${_notifications.length}',
-        );
 
         // Forcer la mise à jour de la liste réactive
         _notifications.refresh();
-        print('📱 Liste réactive rafraîchie');
 
         // Forcer la mise à jour des statistiques
         _updateStats();
-        print('📱 Statistiques mises à jour');
-
-        print('✅ Notification supprimée avec succès');
-      } else {
-        print('❌ Échec de la suppression dans le stockage');
-      }
+      } else {}
 
       return success;
     } catch (e) {
-      print('❌ Erreur lors de la suppression de la notification: $e');
       return false;
     }
   }
@@ -268,18 +170,14 @@ class NotificationManagerService {
   /// Supprimer toutes les notifications
   Future<bool> deleteAllNotifications() async {
     try {
-      print('📱 Suppression de toutes les notifications...');
-
       final success = await _storage.deleteAllNotifications();
 
       if (success) {
         await _loadStoredNotifications();
-        print('✅ Toutes les notifications supprimées');
       }
 
       return success;
     } catch (e) {
-      print('❌ Erreur lors de la suppression de toutes les notifications: $e');
       return false;
     }
   }
@@ -291,18 +189,14 @@ class NotificationManagerService {
     int? limit,
   }) async {
     try {
-      print('📱 Filtrage des notifications: $filter, tri: $sort');
-
       final filteredNotifications = await _storage.filterNotifications(
         filter: filter,
         sort: sort,
         limit: limit,
       );
 
-      print('📱 ${filteredNotifications.length} notifications filtrées');
       return filteredNotifications;
     } catch (e) {
-      print('❌ Erreur lors du filtrage des notifications: $e');
       return [];
     }
   }
@@ -310,14 +204,10 @@ class NotificationManagerService {
   /// Rechercher des notifications
   Future<List<LocalNotification>> searchNotifications(String query) async {
     try {
-      print('📱 Recherche de notifications: "$query"');
-
       final results = await _storage.searchNotifications(query);
 
-      print('📱 ${results.length} notifications trouvées');
       return results;
     } catch (e) {
-      print('❌ Erreur lors de la recherche de notifications: $e');
       return [];
     }
   }
@@ -325,15 +215,11 @@ class NotificationManagerService {
   /// Obtenir les statistiques
   Future<NotificationStats> getStats() async {
     try {
-      print('📱 Calcul des statistiques...');
-
       final stats = await _storage.getStats();
       _stats.value = stats;
 
-      print('📱 Statistiques: ${stats.total} total, ${stats.unread} non lues');
       return stats;
     } catch (e) {
-      print('❌ Erreur lors du calcul des statistiques: $e');
       return _stats.value;
     }
   }
@@ -343,28 +229,20 @@ class NotificationManagerService {
     try {
       final stats = NotificationStats.fromNotifications(_notifications);
       _stats.value = stats;
-    } catch (e) {
-      print('❌ Erreur lors de la mise à jour des statistiques: $e');
-    }
+    } catch (e) {}
   }
 
   /// Nettoyer les données anciennes
   Future<bool> cleanupOldNotifications({int daysOld = 30}) async {
     try {
-      print(
-        '📱 Nettoyage des notifications anciennes (plus de $daysOld jours)...',
-      );
-
       final success = await _storage.deleteOldNotifications(daysOld: daysOld);
 
       if (success) {
         await _loadStoredNotifications();
-        print('✅ Nettoyage terminé');
       }
 
       return success;
     } catch (e) {
-      print('❌ Erreur lors du nettoyage des notifications anciennes: $e');
       return false;
     }
   }
@@ -372,18 +250,14 @@ class NotificationManagerService {
   /// Nettoyer les données corrompues
   Future<bool> cleanupCorruptedData() async {
     try {
-      print('📱 Nettoyage des données corrompues...');
-
       final success = await _storage.cleanupCorruptedData();
 
       if (success) {
         await _loadStoredNotifications();
-        print('✅ Nettoyage des données corrompues terminé');
       }
 
       return success;
     } catch (e) {
-      print('❌ Erreur lors du nettoyage des données corrompues: $e');
       return false;
     }
   }
@@ -391,18 +265,14 @@ class NotificationManagerService {
   /// Définir le nombre maximum de notifications
   Future<bool> setMaxNotifications(int max) async {
     try {
-      print('📱 Définition du nombre maximum de notifications: $max');
-
       final success = await _storage.setMaxNotifications(max);
 
       if (success) {
         await _loadStoredNotifications();
-        print('✅ Nombre maximum de notifications défini');
       }
 
       return success;
     } catch (e) {
-      print('❌ Erreur lors de la définition du nombre maximum: $e');
       return false;
     }
   }
@@ -410,18 +280,8 @@ class NotificationManagerService {
   /// Rafraîchir les notifications
   Future<void> refreshNotifications() async {
     try {
-      print('📱 ===== RAFRAÎCHISSEMENT DES NOTIFICATIONS =====');
-      print(
-        '📱 État actuel de la liste réactive: ${_notifications.length} notifications',
-      );
       await _loadStoredNotifications();
-      print(
-        '📱 État final de la liste réactive: ${_notifications.length} notifications',
-      );
-      print('✅ Notifications rafraîchies avec succès');
-    } catch (e) {
-      print('❌ Erreur lors du rafraîchissement des notifications: $e');
-    }
+    } catch (e) {}
   }
 
   /// Obtenir les notifications non lues

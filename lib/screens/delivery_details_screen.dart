@@ -1554,13 +1554,9 @@ class _DeliveryDetailsScreenState extends State<DeliveryDetailsScreen> {
               ? Uri.parse(cleanNumber)
               : Uri.parse('tel:$cleanNumber');
 
-      print('🔍 Tentative d\'appel vers: $uri');
-
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri);
-        print('✅ Appel lancé avec succès');
       } else {
-        print('❌ Impossible de lancer l\'appel');
         Get.snackbar(
           'Erreur',
           'Impossible de lancer l\'appel vers $phoneNumber',
@@ -1570,7 +1566,6 @@ class _DeliveryDetailsScreenState extends State<DeliveryDetailsScreen> {
         );
       }
     } catch (e) {
-      print('❌ Erreur lors de l\'appel: $e');
       Get.snackbar(
         'Erreur',
         'Erreur lors du lancement de l\'appel: $e',
@@ -1588,14 +1583,9 @@ class _DeliveryDetailsScreenState extends State<DeliveryDetailsScreen> {
           .replaceAll(RegExp(r'[^\w\s]'), '')
           .replaceAll(' ', '+');
 
-      print('🔍 Tentative d\'ouverture de Google Maps pour: $address');
-      print('🔍 Adresse nettoyée: $cleanAddress');
-
       // Essayer d'abord avec l'URL Google Maps native
       final googleMapsUrl = 'https://maps.google.com/maps?q=$cleanAddress';
       final uri = Uri.parse(googleMapsUrl);
-
-      print('🔍 URL Google Maps: $googleMapsUrl');
 
       // Essayer de lancer l'URL
       bool launched = false;
@@ -1604,22 +1594,16 @@ class _DeliveryDetailsScreenState extends State<DeliveryDetailsScreen> {
         if (await canLaunchUrl(uri)) {
           await launchUrl(uri, mode: LaunchMode.externalApplication);
           launched = true;
-          print('✅ Google Maps ouvert avec succès');
         }
       } catch (e) {
-        print('⚠️ Échec avec mode externe, essai avec mode par défaut: $e');
         try {
           await launchUrl(uri);
           launched = true;
-          print('✅ Google Maps ouvert avec mode par défaut');
-        } catch (e2) {
-          print('⚠️ Échec avec mode par défaut: $e2');
-        }
+        } catch (e2) {}
       }
 
       // Si l'URL Google Maps échoue, essayer avec une URL de géolocalisation native
       if (!launched) {
-        print('🔄 Tentative avec URL géolocalisation native...');
         final geoUrl = 'geo:0,0?q=$cleanAddress';
         final geoUri = Uri.parse(geoUrl);
 
@@ -1627,16 +1611,12 @@ class _DeliveryDetailsScreenState extends State<DeliveryDetailsScreen> {
           if (await canLaunchUrl(geoUri)) {
             await launchUrl(geoUri, mode: LaunchMode.externalApplication);
             launched = true;
-            print('✅ Géolocalisation native ouverte avec succès');
           }
-        } catch (e) {
-          print('⚠️ Échec avec géolocalisation native: $e');
-        }
+        } catch (e) {}
       }
 
       // Si la géolocalisation native échoue, essayer avec une URL de recherche web
       if (!launched) {
-        print('🔄 Tentative avec URL de recherche web...');
         final webSearchUrl =
             'https://www.google.com/search?q=$cleanAddress+location';
         final webUri = Uri.parse(webSearchUrl);
@@ -1645,15 +1625,11 @@ class _DeliveryDetailsScreenState extends State<DeliveryDetailsScreen> {
           if (await canLaunchUrl(webUri)) {
             await launchUrl(webUri, mode: LaunchMode.externalApplication);
             launched = true;
-            print('✅ Recherche web ouverte avec succès');
           }
-        } catch (e) {
-          print('⚠️ Échec avec recherche web: $e');
-        }
+        } catch (e) {}
       }
 
       if (!launched) {
-        print('❌ Impossible d\'ouvrir Google Maps ou recherche web');
         Get.snackbar(
           'Google Maps requis',
           'Pour utiliser la navigation, veuillez installer Google Maps depuis le Play Store.',
@@ -1667,7 +1643,6 @@ class _DeliveryDetailsScreenState extends State<DeliveryDetailsScreen> {
         );
       }
     } catch (e) {
-      print('❌ Erreur lors de l\'ouverture de Google Maps: $e');
       Get.snackbar(
         'Erreur',
         'Erreur lors de l\'ouverture de la navigation: $e',
@@ -1772,8 +1747,6 @@ class _DeliveryDetailsScreenState extends State<DeliveryDetailsScreen> {
 
   Future<void> _startDelivery(ColisDetail colis) async {
     try {
-      print('🔍 Démarrage de la livraison pour le colis: ${colis.code}');
-
       // Afficher un dialog de confirmation
       final confirmed = await Get.dialog<bool>(
         AlertDialog(
@@ -1830,7 +1803,6 @@ class _DeliveryDetailsScreenState extends State<DeliveryDetailsScreen> {
         }
       }
     } catch (e) {
-      print('❌ Erreur lors du démarrage de la livraison: $e');
       await LocalNotificationService().showErrorNotification(
         title: 'Erreur',
         message: 'Erreur lors du démarrage de la livraison: $e',
@@ -1841,8 +1813,6 @@ class _DeliveryDetailsScreenState extends State<DeliveryDetailsScreen> {
 
   Future<void> _completeDelivery(ColisDetail colis) async {
     try {
-      print('🔍 Finalisation de la livraison pour le colis: ${colis.code}');
-
       // Afficher un dialog de confirmation
       final confirmed = await Get.dialog<bool>(
         AlertDialog(
@@ -1886,7 +1856,6 @@ class _DeliveryDetailsScreenState extends State<DeliveryDetailsScreen> {
         }
       }
     } catch (e) {
-      print('❌ Erreur lors de la finalisation de la livraison: $e');
       await LocalNotificationService().showErrorNotification(
         title: 'Erreur',
         message: 'Erreur lors de la finalisation de la livraison: $e',
@@ -1897,8 +1866,6 @@ class _DeliveryDetailsScreenState extends State<DeliveryDetailsScreen> {
 
   Future<void> _cancelDelivery(ColisDetail colis) async {
     try {
-      print('🔍 Annulation de la livraison pour le colis: ${colis.code}');
-
       // Naviguer vers l'écran d'annulation
       final result = await Get.to(
         () => CancelDeliveryScreen(
@@ -1913,7 +1880,6 @@ class _DeliveryDetailsScreenState extends State<DeliveryDetailsScreen> {
         _loadColisDetails();
       }
     } catch (e) {
-      print('❌ Erreur lors de l\'annulation de la livraison: $e');
       await LocalNotificationService().showErrorNotification(
         title: 'Erreur',
         message: 'Erreur lors de l\'annulation de la livraison: $e',

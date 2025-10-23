@@ -47,6 +47,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _checkIfFromLogin();
       _loadData();
       _checkNotificationRefreshFlags();
+      _ensureFcmTokenRegistered(); // Vérifier et enregistrer le token FCM
     });
   }
 
@@ -57,37 +58,36 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (_dataLoaded) {
       print('🔍 didChangeDependencies() - Rafraîchissement des données');
       _refreshData();
+      // Vérifier l'enregistrement FCM au retour sur le dashboard
+      _ensureFcmTokenRegistered();
     }
   }
 
-  /// Vérifier si l'utilisateur vient de la page de login
+  /// Vérifier et enregistrer le token FCM automatiquement
   void _checkIfFromLogin() {
     final currentRoute = Get.currentRoute;
-    print('🔍 Route actuelle: $currentRoute');
 
     // Vérifier si on vient de la page de login
     if (currentRoute == '/dashboard' || currentRoute.contains('dashboard')) {
       // Vérifier l'historique de navigation pour détecter si on vient de login
       final previousRoute = Get.previousRoute;
-      print('🔍 Route précédente: $previousRoute');
 
       if (previousRoute == '/' ||
           previousRoute == '/login' ||
           previousRoute.isEmpty) {
-        print('🔍 Utilisateur détecté comme venant de la page de login');
         _registerFcmToken();
       }
     }
   }
 
-  /// Enregistrer le token FCM si l'utilisateur vient de la page de login
+  /// Enregistrer le token FCM automatiquement
   void _registerFcmToken() async {
     try {
-      print('🔄 Enregistrement du token FCM...');
+      print('🔄 Tentative d\'enregistrement du token FCM...');
       bool success = await NotificationService.registerFcmTokenOnServer();
 
       if (success) {
-        print('✅ Token FCM enregistré avec succès');
+        print('✅ Token FCM enregistré avec succès sur le serveur');
       } else {
         print('❌ Échec de l\'enregistrement du token FCM');
       }
@@ -96,79 +96,69 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  /// Vérifier et enregistrer le token FCM si nécessaire
+  void _ensureFcmTokenRegistered() async {
+    try {
+      print('🔍 Vérification de l\'état d\'enregistrement du token FCM...');
+
+      // Vérifier si le token FCM est déjà enregistré
+      final isRegistered = await NotificationService.isFcmTokenRegistered();
+      if (isRegistered) {
+        print('✅ Token FCM déjà enregistré et valide');
+        return;
+      }
+
+      // Vérifier si le token FCM est disponible
+      final fcmToken = NotificationService.fcmToken;
+      if (fcmToken == null || fcmToken.isEmpty) {
+        print('⚠️ Token FCM non disponible, réinitialisation complète...');
+        await NotificationService.forceReinitializeAndSetup();
+        return;
+      }
+
+      // Vérifier si l'utilisateur est connecté
+      final authController = Get.find<AuthController>();
+      if (!authController.isLoggedIn || authController.authToken.isEmpty) {
+        print('⚠️ Utilisateur non connecté, enregistrement FCM reporté');
+        return;
+      }
+
+      // Enregistrer le token FCM
+      _registerFcmToken();
+    } catch (e) {
+      print('❌ Erreur lors de la vérification FCM: $e');
+    }
+  }
+
   /// Charger les données du dashboard
   void _loadData() {
-    print('🔍 _loadData() - Début du chargement des données');
-    print('🔍 _loadData() - _dataLoaded: $_dataLoaded');
-
     // Charger les ramassages seulement si la liste est vide
     final ramassageController = Get.find<RamassageController>();
-    print('🔍 ===== ÉTAT INITIAL RAMASSAGE CONTROLLER =====');
-    print(
-      '🔍 _loadData() - Ramassages: ${ramassageController.ramassages.length}, isLoading: ${ramassageController.isLoading}',
-    );
-    print('🔍 _loadData() - Détail des ramassages:');
-    for (int i = 0; i < ramassageController.ramassages.length; i++) {
-      final ramassage = ramassageController.ramassages[i];
-      print(
-        '🔍   [$i] ID: ${ramassage.id}, Code: ${ramassage.codeRamassage}, Statut: ${ramassage.statut}',
-      );
-    }
-    print('🔍 ===========================================');
-
     if (ramassageController.ramassages.isEmpty &&
         !ramassageController.isLoading) {
-      print('🔍 _loadData() - Chargement des ramassages');
       ramassageController.loadRamassages();
-    } else {
-      print(
-        '🔍 _loadData() - Pas de chargement des ramassages (liste non vide ou en cours de chargement)',
-      );
-    }
+    } else {}
 
     // Charger les colis de livraison seulement si la liste est vide
     final deliveryController = Get.find<DeliveryController>();
-    print('🔍 ===== ÉTAT INITIAL DELIVERY CONTROLLER =====');
-    print(
-      '🔍 _loadData() - Colis: ${deliveryController.colis.length}, isLoading: ${deliveryController.isLoading}',
-    );
-    print('🔍 _loadData() - Détail des colis:');
-    for (int i = 0; i < deliveryController.colis.length; i++) {
-      final colis = deliveryController.colis[i];
-      print(
-        '🔍   [$i] ID: ${colis.id}, Code: ${colis.code}, Status: ${colis.livraison.status}',
-      );
-    }
-    print('🔍 ===========================================');
-
     if (deliveryController.colis.isEmpty && !deliveryController.isLoading) {
-      print('🔍 _loadData() - Chargement des colis');
       deliveryController.loadColis();
-    } else {
-      print(
-        '🔍 _loadData() - Pas de chargement des colis (liste non vide ou en cours de chargement)',
-      );
-    }
+    } else {}
 
     _dataLoaded = true;
-    print('🔍 _loadData() - Chargement terminé, _dataLoaded = true');
   }
 
   /// Rafraîchir les données du dashboard
   void _refreshData() {
-    print('🔍 _refreshData() - Rafraîchissement des données');
-
     // Rafraîchir les ramassages
     final ramassageController = Get.find<RamassageController>();
     if (!ramassageController.isLoading) {
-      print('🔍 _refreshData() - Rafraîchissement des ramassages');
       ramassageController.refreshRamassages();
     }
 
     // Rafraîchir les colis de livraison
     final deliveryController = Get.find<DeliveryController>();
     if (!deliveryController.isLoading) {
-      print('🔍 _refreshData() - Rafraîchissement des colis');
       deliveryController.refreshColis();
     }
   }
@@ -176,22 +166,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
   /// Vérifier les flags d'actualisation des notifications
   void _checkNotificationRefreshFlags() {
     try {
-      print('🔄 Vérification des flags d\'actualisation des notifications');
       NotificationService.checkAndProcessRefreshFlags();
-
-      // Ajouter un diagnostic du statut des notifications
-      print('🔄 Diagnostic du statut des notifications...');
-      NotificationService.checkNotificationStatus();
-
-      // Tester l'actualisation forcée des listes
-      print('🔄 Test d\'actualisation forcée des listes...');
       NotificationService.forceRefreshLists();
-
-      // Initialiser le gestionnaire de notifications locales
-      print('🔄 Initialisation du gestionnaire de notifications locales...');
       NotificationManagerService().initialize();
     } catch (e) {
-      print('❌ Erreur lors de la vérification des flags: $e');
+      // Erreur silencieuse
     }
   }
 
@@ -227,11 +206,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             payload: 'delivery_action_info',
           );
       }
-
-      print('✅ Notification locale envoyée: $title');
-    } catch (e) {
-      print('❌ Erreur lors de l\'envoi de la notification locale: $e');
-    }
+    } catch (e) {}
   }
 
   @override
@@ -349,7 +324,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   () => Text(
                     authController.livreurName.isNotEmpty
                         ? authController.livreurName
-                        : '+225 ${authController.livreurMobile}',
+                        : '${authController.livreurMobile}',
                     style: GoogleFonts.montserrat(
                       fontSize: AppDimensions.fontSizeXS,
                       color: AppColors.textSecondary, // Gris moyen
@@ -396,7 +371,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final ramassageStats = ramassageController.statistiques;
     final ramassagesEnCours = ramassageStats?.colisEnCours ?? 0;
     final ramassagesTermines = ramassageStats?.colisTermines ?? 0;
-    final totalRamassages = ramassageStats?.total ?? 0;
 
     // Utiliser les statistiques de l'API pour les livraisons
     final deliveryController = Get.find<DeliveryController>();
@@ -406,17 +380,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final colisLivres = deliveryStats?.colisLivres ?? 0;
     final totalColis = deliveryStats?.total ?? 0;
 
-    // Debug logs
-    print('🔍 Dashboard Stats - Total ramassages: $totalRamassages');
-    print('🔍 Dashboard Stats - En cours: $ramassagesEnCours');
-    print('🔍 Dashboard Stats - Terminés: $ramassagesTermines');
-    print(
-      '🔍 Dashboard Stats - En attente: ${ramassageStats?.colisEnAttente ?? 0}',
-    );
-    print('🔍 Dashboard Stats - Total colis: $totalColis');
-    print('🔍 Dashboard Stats - Colis en attente: $colisEnAttente');
-    print('🔍 Dashboard Stats - Colis en cours: $colisEnCours');
-    print('🔍 Dashboard Stats - Colis livrés: $colisLivres');
     return Container(
       margin: const EdgeInsets.symmetric(
         horizontal: AppDimensions.spacingM,
@@ -653,10 +616,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final colisLivres = deliveryStats?.colisLivres ?? 0;
     final totalColis = deliveryStats?.total ?? 0;
 
-    // Debug logs pour les onglets
-    print(
-      '🔍 Segmented Control - Livraisons: $colisLivres/$totalColis, Ramassages: $ramassagesTermines/$totalRamassages',
-    );
     return Container(
       margin: const EdgeInsets.symmetric(
         horizontal: AppDimensions.spacingM,
@@ -736,7 +695,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           : null,
                 ),
                 child: Text(
-                  'Ramassages ($ramassagesTermines/$totalRamassages)',
+                  'Ramassages ($ramassagesTermines)',
                   textAlign: TextAlign.center,
                   style: GoogleFonts.montserrat(
                     fontSize: AppDimensions.fontSizeXS,
@@ -759,19 +718,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildDeliveriesList() {
     return GetBuilder<DeliveryController>(
       builder: (controller) {
-        print('🔍 ===== RENDU LISTE LIVRAISONS =====');
-        print(
-          '🔍 Dashboard Livraisons - État controller: isLoading=${controller.isLoading}, colis=${controller.colis.length}, error="${controller.errorMessage}"',
-        );
-        print('🔍 Détail des colis dans la liste:');
-        for (int i = 0; i < controller.colis.length; i++) {
-          final colis = controller.colis[i];
-          print(
-            '🔍   [$i] ID: ${colis.id}, Code: ${colis.code}, Status: ${colis.livraison.status}',
-          );
-        }
-        print('🔍 ===================================');
-
         if (controller.isLoading) {
           return const DeliveryLoadingState();
         }
@@ -795,22 +741,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
         }
 
         // Filtrer les colis pour afficher uniquement ceux en attente ou en cours
-        print('🔍 Filtrage des colis actifs...');
         final activeColis =
             controller.colis
                 .where((colis) => colis.status == 0 || colis.status == 1)
                 .toList();
 
-        print('🔍 Colis actifs trouvés: ${activeColis.length}');
-        for (int i = 0; i < activeColis.length; i++) {
-          final colis = activeColis[i];
-          print(
-            '🔍   [$i] ID: ${colis.id}, Code: ${colis.code}, Status: ${colis.status}',
-          );
-        }
-
         if (activeColis.isEmpty) {
-          print('🔍 Aucun colis actif trouvé, affichage de l\'état vide');
           return const DeliveryEmptyState(
             title: 'Aucune livraison active',
             subtitle: 'Aucune livraison en attente ou en cours pour le moment',
@@ -853,19 +789,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildPickupsList() {
     return GetBuilder<RamassageController>(
       builder: (controller) {
-        print('🔍 ===== RENDU LISTE RAMASSAGES =====');
-        print(
-          '🔍 Dashboard - État controller: isLoading=${controller.isLoading}, ramassages=${controller.ramassages.length}, error="${controller.errorMessage}"',
-        );
-        print('🔍 Détail des ramassages dans la liste:');
-        for (int i = 0; i < controller.ramassages.length; i++) {
-          final ramassage = controller.ramassages[i];
-          print(
-            '🔍   [$i] ID: ${ramassage.id}, Code: ${ramassage.codeRamassage}, Statut: ${ramassage.statut}',
-          );
-        }
-        print('🔍 ===================================');
-
         if (controller.isLoading) {
           return const Center(child: CircularProgressIndicator());
         }
@@ -945,7 +868,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         }
 
         // Filtrer les ramassages pour afficher uniquement ceux planifiés ou en cours
-        print('🔍 Filtrage des ramassages actifs...');
         final activeRamassages =
             controller.ramassages
                 .where(
@@ -955,16 +877,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 )
                 .toList();
 
-        print('🔍 Ramassages actifs trouvés: ${activeRamassages.length}');
-        for (int i = 0; i < activeRamassages.length; i++) {
-          final ramassage = activeRamassages[i];
-          print(
-            '🔍   [$i] ID: ${ramassage.id}, Code: ${ramassage.codeRamassage}, Statut: ${ramassage.statut}',
-          );
-        }
-
         if (activeRamassages.isEmpty) {
-          print('🔍 Aucun ramassage actif trouvé, affichage de l\'état vide');
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -1242,10 +1155,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   void _startPickup(Ramassage ramassage) async {
-    print(
-      '🔍 Démarrage du ramassage ${ramassage.id} pour: ${ramassage.boutique.libelle}',
-    );
-
     // Afficher un dialog de confirmation
     final confirmed = await Get.dialog<bool>(
       AlertDialog(
@@ -1310,7 +1219,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final success = await ramassageController.startRamassage(ramassage.id);
 
       if (success) {
-        print('🔄 ===== DÉMARRAGE RAMASSAGE - RAFRAÎCHISSEMENT =====');
         print(
           '🔄 Ramassage ID: ${ramassage.id}, Code: ${ramassage.codeRamassage}',
         );
@@ -1321,20 +1229,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
         print('🔄 - isLoading: ${ramassageController.isLoading}');
 
         // Mise à jour transparente de la liste
-        print('🔄 Appel de ramassageController.refreshRamassages()...');
         await ramassageController.refreshRamassages();
 
-        print('🔄 État après rafraîchissement:');
-        print(
-          '🔄 - Nombre de ramassages: ${ramassageController.ramassages.length}',
-        );
-        print('🔄 - isLoading: ${ramassageController.isLoading}');
-
         // Forcer la mise à jour de l'UI
-        print('🔄 Mise à jour de l\'UI...');
         ramassageController.update();
-
-        print('🔄 ================================================');
 
         // Envoyer une notification locale
         await _showLocalNotification(
@@ -1343,9 +1241,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
           type: 'success',
         );
       } else {
-        print(
-          '❌ Échec du démarrage du ramassage: ${ramassageController.errorMessage}',
-        );
         // Envoyer une notification locale d'erreur
         await _showLocalNotification(
           title: '❌ Erreur',
@@ -1357,10 +1252,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   void _finishPickup(Ramassage ramassage) async {
-    print(
-      '🔍 Finalisation du ramassage ${ramassage.id} pour: ${ramassage.boutique.libelle}',
-    );
-
     // Naviguer vers l'écran de finalisation
     final result = await Get.to(
       () =>
@@ -1369,34 +1260,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     // Si la finalisation a réussi, rafraîchir la liste de manière transparente
     if (result == true) {
-      print('🔄 ===== FINALISATION RAMASSAGE - RAFRAÎCHISSEMENT =====');
-      print(
-        '🔄 Ramassage ID: ${ramassage.id}, Code: ${ramassage.codeRamassage}',
-      );
-      print('✅ Ramassage finalisé avec succès depuis le dashboard');
-
       // Rafraîchir la liste de manière transparente
       final ramassageController = Get.find<RamassageController>();
-      print('🔄 État avant rafraîchissement:');
-      print(
-        '🔄 - Nombre de ramassages: ${ramassageController.ramassages.length}',
-      );
-      print('🔄 - isLoading: ${ramassageController.isLoading}');
-
-      print('🔄 Appel de ramassageController.refreshRamassages()...');
       await ramassageController.refreshRamassages();
 
-      print('🔄 État après rafraîchissement:');
-      print(
-        '🔄 - Nombre de ramassages: ${ramassageController.ramassages.length}',
-      );
-      print('🔄 - isLoading: ${ramassageController.isLoading}');
-
       // Forcer la mise à jour de l'UI
-      print('🔄 Mise à jour de l\'UI...');
       ramassageController.update();
-
-      print('🔄 ================================================');
 
       // Envoyer une notification locale
       await _showLocalNotification(
@@ -1405,16 +1274,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
             'Le ramassage ${ramassage.codeRamassage} a été terminé avec succès',
         type: 'success',
       );
-    } else {
-      print('❌ Finalisation de ramassage échouée ou annulée');
-    }
+    } else {}
   }
 
   void _cancelPickup(Ramassage ramassage) async {
-    print(
-      '🔍 Annulation du ramassage ${ramassage.id} pour: ${ramassage.boutique.libelle}',
-    );
-
     // Afficher un dialog de confirmation avec saisie de raison
     final result = await Get.dialog<Map<String, String>?>(
       _CancelRamassageDialog(ramassage: ramassage),
@@ -1423,13 +1286,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (result != null) {
       final raison = result['raison'] ?? '';
       final commentaire = result['commentaire'] ?? '';
-
-      print('🔄 ===== ANNULATION RAMASSAGE - API CALL =====');
-      print(
-        '🔄 Ramassage ID: ${ramassage.id}, Code: ${ramassage.codeRamassage}',
-      );
-      print('🔄 Raison: $raison');
-      print('🔄 Commentaire: $commentaire');
 
       // Appel à l'API d'annulation
       final authController = Get.find<AuthController>();
@@ -1441,30 +1297,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
       );
 
       if (response.success) {
-        print('✅ Ramassage annulé avec succès via API');
-
         // Rafraîchir la liste de manière transparente
         final ramassageController = Get.find<RamassageController>();
-        print('🔄 État avant rafraîchissement:');
-        print(
-          '🔄 - Nombre de ramassages: ${ramassageController.ramassages.length}',
-        );
-        print('🔄 - isLoading: ${ramassageController.isLoading}');
-
-        print('🔄 Appel de ramassageController.refreshRamassages()...');
         await ramassageController.refreshRamassages();
 
-        print('🔄 État après rafraîchissement:');
-        print(
-          '🔄 - Nombre de ramassages: ${ramassageController.ramassages.length}',
-        );
-        print('🔄 - isLoading: ${ramassageController.isLoading}');
-
         // Forcer la mise à jour de l'UI
-        print('🔄 Mise à jour de l\'UI...');
         ramassageController.update();
-
-        print('🔄 ================================================');
 
         // Envoyer une notification locale de succès
         await _showLocalNotification(
@@ -1474,7 +1312,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
           type: 'success',
         );
       } else {
-        print('❌ Échec de l\'annulation du ramassage: ${response.message}');
         // Envoyer une notification locale d'erreur
         await _showLocalNotification(
           title: '❌ Erreur',
@@ -1482,9 +1319,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           type: 'error',
         );
       }
-    } else {
-      print('❌ Annulation de ramassage échouée ou annulée');
-    }
+    } else {}
   }
 
   Widget _buildActionButtons(Ramassage ramassage) {
@@ -1713,7 +1548,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void _handleInitialTab() {
     // Vérifier s'il y a un paramètre 'tab' dans l'URL
     final currentRoute = Get.currentRoute;
-    print('🔍 Route actuelle: $currentRoute');
 
     if (currentRoute.contains('tab=ramassages')) {
       // Aller directement sur l'onglet Ramassages
@@ -1721,7 +1555,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _selectedBottomNavIndex = 0; // Rester sur l'onglet Accueil
         _selectedTab = 1; // Mais afficher l'onglet Ramassages
       });
-      print('🔍 Navigation vers l\'onglet Ramassages');
     } else {
       // Comportement par défaut
       _resetToHomeTab();
@@ -1909,8 +1742,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   void _startDelivery(colis) async {
-    print('🔍 Démarrage de la livraison pour le colis: ${colis.code}');
-
     // Afficher un dialog de confirmation
     final confirmed = await Get.dialog<bool>(
       AlertDialog(
@@ -1975,25 +1806,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final success = await deliveryController.startDelivery(colis.id);
 
       if (success) {
-        print('🔄 ===== DÉMARRAGE LIVRAISON - RAFRAÎCHISSEMENT =====');
-        print('🔄 Colis ID: ${colis.id}, Code: ${colis.code}');
-        print('🔄 État avant rafraîchissement:');
-        print('🔄 - Nombre de colis: ${deliveryController.colis.length}');
-        print('🔄 - isLoading: ${deliveryController.isLoading}');
-
         // Rafraîchir la liste de manière transparente
-        print('🔄 Appel de deliveryController.refreshColis()...');
         await deliveryController.refreshColis();
 
-        print('🔄 État après rafraîchissement:');
-        print('🔄 - Nombre de colis: ${deliveryController.colis.length}');
-        print('🔄 - isLoading: ${deliveryController.isLoading}');
-
         // Forcer la mise à jour de l'UI
-        print('🔄 Mise à jour de l\'UI...');
         deliveryController.update();
-
-        print('🔄 ================================================');
 
         // Envoyer une notification locale
         await _showLocalNotification(
@@ -2002,10 +1819,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
           type: 'success',
         );
       } else {
-        print(
-          '❌ Échec du démarrage de la livraison: ${deliveryController.errorMessage}',
-        );
-
         // Vérifier si c'est le cas des livraisons actives pour afficher un dialog spécial
         if (deliveryController.errorMessage.contains(
           'Vous avez déjà une livraison en cours',
@@ -2024,8 +1837,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   void _completeDelivery(colis) async {
-    print('🔍 Finalisation de la livraison pour le colis: ${colis.code}');
-
     // Naviguer vers l'écran de finalisation
     final result = await Get.to(
       () => CompleteDeliveryScreen(
@@ -2038,28 +1849,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     // Si la finalisation a réussi, rafraîchir la liste de manière transparente
     if (result == true) {
-      print('🔄 ===== FINALISATION LIVRAISON - RAFRAÎCHISSEMENT =====');
-      print('🔄 Colis ID: ${colis.id}, Code: ${colis.code}');
-      print('✅ Livraison finalisée avec succès depuis le dashboard');
-
       // Rafraîchir la liste de manière transparente
       final deliveryController = Get.find<DeliveryController>();
-      print('🔄 État avant rafraîchissement:');
-      print('🔄 - Nombre de colis: ${deliveryController.colis.length}');
-      print('🔄 - isLoading: ${deliveryController.isLoading}');
-
-      print('🔄 Appel de deliveryController.refreshColis()...');
       await deliveryController.refreshColis();
 
-      print('🔄 État après rafraîchissement:');
-      print('🔄 - Nombre de colis: ${deliveryController.colis.length}');
-      print('🔄 - isLoading: ${deliveryController.isLoading}');
-
       // Forcer la mise à jour de l'UI
-      print('🔄 Mise à jour de l\'UI...');
       deliveryController.update();
-
-      print('🔄 ================================================');
 
       // Envoyer une notification locale
       await _showLocalNotification(
@@ -2067,14 +1862,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
         body: 'La livraison du colis ${colis.code} a été terminée avec succès',
         type: 'success',
       );
-    } else {
-      print('❌ Finalisation de livraison échouée ou annulée');
-    }
+    } else {}
   }
 
   void _cancelDelivery(colis) async {
-    print('🔍 Annulation de la livraison pour le colis: ${colis.code}');
-
     // Naviguer vers l'écran d'annulation
     final result = await Get.to(
       () => CancelDeliveryScreen(
@@ -2086,28 +1877,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     // Si l'annulation a réussi, rafraîchir la liste de manière transparente
     if (result == true) {
-      print('🔄 ===== ANNULATION LIVRAISON - RAFRAÎCHISSEMENT =====');
-      print('🔄 Colis ID: ${colis.id}, Code: ${colis.code}');
-      print('✅ Livraison annulée avec succès depuis le dashboard');
-
       // Rafraîchir la liste de manière transparente
       final deliveryController = Get.find<DeliveryController>();
-      print('🔄 État avant rafraîchissement:');
-      print('🔄 - Nombre de colis: ${deliveryController.colis.length}');
-      print('🔄 - isLoading: ${deliveryController.isLoading}');
-
-      print('🔄 Appel de deliveryController.refreshColis()...');
       await deliveryController.refreshColis();
 
-      print('🔄 État après rafraîchissement:');
-      print('🔄 - Nombre de colis: ${deliveryController.colis.length}');
-      print('🔄 - isLoading: ${deliveryController.isLoading}');
-
       // Forcer la mise à jour de l'UI
-      print('🔄 Mise à jour de l\'UI...');
       deliveryController.update();
-
-      print('🔄 ================================================');
 
       // Envoyer une notification locale
       await _showLocalNotification(
@@ -2115,9 +1890,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         body: 'La livraison du colis ${colis.code} a été annulée',
         type: 'error',
       );
-    } else {
-      print('❌ Annulation de livraison échouée ou annulée');
-    }
+    } else {}
   }
 
   /// Afficher un dialog pour les livraisons actives

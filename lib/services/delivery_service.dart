@@ -12,11 +12,6 @@ class DeliveryService {
     required String token,
   }) async {
     try {
-      print(
-        '🔍 Service - URL: ${ApiConstants.baseUrl}/api/livreur/colis-assignes',
-      );
-      print('🔍 Service - Token: ${token.substring(0, 20)}...');
-
       final uri = Uri.parse(
         '${ApiConstants.baseUrl}/api/livreur/colis-assignes',
       );
@@ -27,8 +22,6 @@ class DeliveryService {
         'X-CSRF-TOKEN': '',
         'Authorization': 'Bearer $token',
       };
-
-      print('🔍 Service - Headers: $headers');
 
       final request = http.Request('GET', uri);
       request.headers.addAll(headers);
@@ -44,15 +37,11 @@ class DeliveryService {
 
       final response = await http.Response.fromStream(streamedResponse);
 
-      print('🔍 Service - Status Code: ${response.statusCode}');
-      print('🔍 Service - Response Body: ${response.body}');
-
       if (response.statusCode == 200) {
         try {
           final responseData = jsonDecode(response.body);
           return DeliveryResponse.fromJson(responseData);
         } catch (e) {
-          print('❌ Erreur lors du parsing de la réponse: $e');
           throw Exception('Erreur lors du parsing de la réponse');
         }
       } else if (response.statusCode == 401) {
@@ -63,15 +52,12 @@ class DeliveryService {
         );
       }
     } on SocketException {
-      print('❌ Erreur de connexion réseau');
       throw Exception(
         'Erreur de connexion. Vérifiez votre connexion internet.',
       );
     } on TimeoutException catch (e) {
-      print('❌ Timeout: $e');
       throw Exception('La requête a pris trop de temps pour se connecter.');
     } catch (e) {
-      print('❌ Erreur lors de la récupération des colis: $e');
       throw Exception(
         'Erreur de connexion. Vérifiez votre connexion internet.',
       );
@@ -84,11 +70,6 @@ class DeliveryService {
     required String token,
   }) async {
     try {
-      print('🔍 Service - Démarrage de la livraison pour le colis: $colisId');
-      print(
-        '🔍 Service - URL: ${ApiConstants.baseUrl}/api/livreur/colis/$colisId/start-delivery',
-      );
-
       final uri = Uri.parse(
         '${ApiConstants.baseUrl}/api/livreur/colis/$colisId/start-delivery',
       );
@@ -100,11 +81,9 @@ class DeliveryService {
         'Authorization': 'Bearer $token',
       };
 
-      print('🔍 Service - Headers: $headers');
-
       final request = http.Request('POST', uri);
       request.headers.addAll(headers);
-      request.body = ''; // Corps vide comme dans le curl
+      request.body = '';
 
       final streamedResponse = await request.send().timeout(
         ApiConstants.connectTimeout,
@@ -117,15 +96,11 @@ class DeliveryService {
 
       final response = await http.Response.fromStream(streamedResponse);
 
-      print('🔍 Service - Status Code: ${response.statusCode}');
-      print('🔍 Service - Response Body: ${response.body}');
-
       if (response.statusCode == 200) {
         try {
           final responseData = jsonDecode(response.body);
           return responseData;
         } catch (e) {
-          print('❌ Erreur lors du parsing de la réponse: $e');
           throw Exception('Erreur lors du parsing de la réponse');
         }
       } else if (response.statusCode == 401) {
@@ -136,22 +111,18 @@ class DeliveryService {
           final responseData = jsonDecode(response.body);
           return responseData; // Retourner la réponse même en cas d'erreur pour que le controller puisse la traiter
         } catch (e) {
-          print('❌ Erreur lors du parsing de la réponse d\'erreur: $e');
           throw Exception(
             'Erreur de connexion. Vérifiez votre connexion internet.',
           );
         }
       }
     } on SocketException {
-      print('❌ Erreur de connexion réseau');
       throw Exception(
         'Erreur de connexion. Vérifiez votre connexion internet.',
       );
     } on TimeoutException catch (e) {
-      print('❌ Timeout: $e');
       throw Exception('La requête a pris trop de temps pour se connecter.');
     } catch (e) {
-      print('❌ Erreur lors du démarrage de la livraison: $e');
       throw Exception(
         'Erreur de connexion. Vérifiez votre connexion internet.',
       );
@@ -166,11 +137,6 @@ class DeliveryService {
     required String token,
   }) async {
     try {
-      print('🔍 Service - Annulation de la livraison pour le colis: $colisId');
-      print(
-        '🔍 Service - URL: ${ApiConstants.baseUrl}/api/livreur/colis/$colisId/cancel-delivery',
-      );
-
       final uri = Uri.parse(
         '${ApiConstants.baseUrl}/api/livreur/colis/$colisId/cancel-delivery',
       );
@@ -187,9 +153,6 @@ class DeliveryService {
         'note_livraison': noteLivraison,
       };
 
-      print('🔍 Service - Headers: $headers');
-      print('🔍 Service - Body: $body');
-
       final request = http.Request('POST', uri);
       request.headers.addAll(headers);
       request.body = jsonEncode(body);
@@ -205,15 +168,11 @@ class DeliveryService {
 
       final response = await http.Response.fromStream(streamedResponse);
 
-      print('🔍 Service - Status Code: ${response.statusCode}');
-      print('🔍 Service - Response Body: ${response.body}');
-
       if (response.statusCode == 200) {
         try {
           final responseData = jsonDecode(response.body);
           return responseData;
         } catch (e) {
-          print('❌ Erreur lors du parsing de la réponse: $e');
           throw Exception('Erreur lors du parsing de la réponse');
         }
       } else if (response.statusCode == 401) {
@@ -224,15 +183,12 @@ class DeliveryService {
         );
       }
     } on SocketException {
-      print('❌ Erreur de connexion réseau');
       throw Exception(
         'Erreur de connexion. Vérifiez votre connexion internet.',
       );
     } on TimeoutException catch (e) {
-      print('❌ Timeout: $e');
       throw Exception('La requête a pris trop de temps pour se connecter.');
     } catch (e) {
-      print('❌ Erreur lors de l\'annulation de la livraison: $e');
       throw Exception(
         'Erreur de connexion. Vérifiez votre connexion internet.',
       );
@@ -245,11 +201,6 @@ class DeliveryService {
     required String token,
   }) async {
     try {
-      print(
-        '🔍 Service - URL: ${ApiConstants.baseUrl}/api/livreur/colis/$colisId/details',
-      );
-      print('🔍 Service - Token: ${token.substring(0, 20)}...');
-
       final uri = Uri.parse(
         '${ApiConstants.baseUrl}/api/livreur/colis/$colisId/details',
       );
@@ -260,8 +211,6 @@ class DeliveryService {
         'X-CSRF-TOKEN': '',
         'Authorization': 'Bearer $token',
       };
-
-      print('🔍 Service - Headers: $headers');
 
       final request = http.Request('GET', uri);
       request.headers.addAll(headers);
@@ -277,15 +226,11 @@ class DeliveryService {
 
       final response = await http.Response.fromStream(streamedResponse);
 
-      print('🔍 Service - Status Code: ${response.statusCode}');
-      print('🔍 Service - Response Body: ${response.body}');
-
       if (response.statusCode == 200) {
         try {
           final responseData = jsonDecode(response.body);
           return DeliveryDetailResponse.fromJson(responseData);
         } catch (e) {
-          print('❌ Erreur lors du parsing de la réponse: $e');
           throw Exception('Erreur lors du parsing de la réponse');
         }
       } else if (response.statusCode == 401) {
@@ -296,15 +241,12 @@ class DeliveryService {
         );
       }
     } on SocketException {
-      print('❌ Erreur de connexion réseau');
       throw Exception(
         'Erreur de connexion. Vérifiez votre connexion internet.',
       );
     } on TimeoutException catch (e) {
-      print('❌ Timeout: $e');
       throw Exception('La requête a pris trop de temps pour se connecter.');
     } catch (e) {
-      print('❌ Erreur lors de la récupération des détails du colis: $e');
       throw Exception(
         'Erreur de connexion. Vérifiez votre connexion internet.',
       );
@@ -322,13 +264,6 @@ class DeliveryService {
     double? longitude,
   }) async {
     try {
-      print(
-        '🔍 Service - Finalisation de la livraison pour le colis: $colisId',
-      );
-      print(
-        '🔍 Service - URL: ${ApiConstants.baseUrl}/api/livreur/colis/$colisId/complete-delivery',
-      );
-
       final uri = Uri.parse(
         '${ApiConstants.baseUrl}/api/livreur/colis/$colisId/complete-delivery',
       );
@@ -337,8 +272,6 @@ class DeliveryService {
         'accept': 'application/json',
         'Authorization': 'Bearer $token',
       };
-
-      print('🔍 Service - Headers: $headers');
 
       final request = http.MultipartRequest('POST', uri);
       request.headers.addAll(headers);
@@ -371,12 +304,9 @@ class DeliveryService {
             request.files.add(multipartFile);
           }
         } catch (e) {
-          print('⚠️ Erreur lors de l\'ajout de la photo: $e');
+          throw Exception('Erreur lors de l\'ajout de la photo: $e');
         }
       }
-
-      print('🔍 Service - Champs: ${request.fields}');
-      print('🔍 Service - Fichiers: ${request.files.length}');
 
       final streamedResponse = await request.send().timeout(
         ApiConstants.connectTimeout,
@@ -389,15 +319,11 @@ class DeliveryService {
 
       final response = await http.Response.fromStream(streamedResponse);
 
-      print('🔍 Service - Status Code: ${response.statusCode}');
-      print('🔍 Service - Response Body: ${response.body}');
-
       if (response.statusCode == 200) {
         try {
           final responseData = jsonDecode(response.body);
           return responseData;
         } catch (e) {
-          print('❌ Erreur lors du parsing de la réponse: $e');
           throw Exception('Erreur lors du parsing de la réponse');
         }
       } else if (response.statusCode == 401) {
@@ -408,15 +334,12 @@ class DeliveryService {
         );
       }
     } on SocketException {
-      print('❌ Erreur de connexion réseau');
       throw Exception(
         'Erreur de connexion. Vérifiez votre connexion internet.',
       );
     } on TimeoutException catch (e) {
-      print('❌ Timeout: $e');
       throw Exception('La requête a pris trop de temps pour se connecter.');
     } catch (e) {
-      print('❌ Erreur lors de la finalisation de la livraison: $e');
       throw Exception(
         'Erreur de connexion. Vérifiez votre connexion internet.',
       );

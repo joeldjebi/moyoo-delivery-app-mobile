@@ -993,10 +993,6 @@ class _RamassageListScreenState extends State<RamassageListScreen> {
   }
 
   void _startPickup(Ramassage ramassage) async {
-    print(
-      '🔍 Démarrage du ramassage ${ramassage.id} pour: ${ramassage.boutique.libelle}',
-    );
-
     // Afficher un dialog de confirmation
     final confirmed = await Get.dialog<bool>(
       AlertDialog(
@@ -1087,10 +1083,6 @@ class _RamassageListScreenState extends State<RamassageListScreen> {
   }
 
   void _finishPickup(Ramassage ramassage) async {
-    print(
-      '🔍 Finalisation du ramassage ${ramassage.id} pour: ${ramassage.boutique.libelle}',
-    );
-
     // Naviguer vers l'écran de finalisation
     final result = await Get.to(
       () => CompleteRamassageScreen(
@@ -1104,15 +1096,10 @@ class _RamassageListScreenState extends State<RamassageListScreen> {
       // Les données sont déjà actualisées par CompleteRamassageScreen
       // Le message de succès est aussi affiché par CompleteRamassageScreen
       // Pas besoin de dupliquer ici
-      print('✅ Ramassage finalisé avec succès depuis la liste');
     }
   }
 
   void _cancelPickup(Ramassage ramassage) async {
-    print(
-      '🔍 Annulation du ramassage ${ramassage.id} pour: ${ramassage.boutique.libelle}',
-    );
-
     // Afficher un dialog de confirmation
     final confirmed = await Get.dialog<bool>(
       AlertDialog(
@@ -1177,13 +1164,6 @@ class _RamassageListScreenState extends State<RamassageListScreen> {
         final raison = result['raison'] ?? '';
         final commentaire = result['commentaire'] ?? '';
 
-        print('🔄 ===== ANNULATION RAMASSAGE - API CALL =====');
-        print(
-          '🔄 Ramassage ID: ${ramassage.id}, Code: ${ramassage.codeRamassage}',
-        );
-        print('🔄 Raison: $raison');
-        print('🔄 Commentaire: $commentaire');
-
         // Appel à l'API d'annulation
         final authController = Get.find<AuthController>();
         final response = await CancelRamassageService.cancelRamassage(
@@ -1194,29 +1174,11 @@ class _RamassageListScreenState extends State<RamassageListScreen> {
         );
 
         if (response.success) {
-          print('✅ Ramassage annulé avec succès via API');
-
           // Rafraîchir la liste de manière transparente
-          print('🔄 État avant rafraîchissement:');
-          print(
-            '🔄 - Nombre de ramassages: ${_ramassageController.ramassages.length}',
-          );
-          print('🔄 - isLoading: ${_ramassageController.isLoading}');
-
-          print('🔄 Appel de _ramassageController.refreshRamassages()...');
           await _ramassageController.refreshRamassages();
 
-          print('🔄 État après rafraîchissement:');
-          print(
-            '🔄 - Nombre de ramassages: ${_ramassageController.ramassages.length}',
-          );
-          print('🔄 - isLoading: ${_ramassageController.isLoading}');
-
           // Forcer la mise à jour de l'UI
-          print('🔄 Mise à jour de l\'UI...');
           _ramassageController.update();
-
-          print('🔄 ================================================');
 
           // Envoyer une notification locale de succès
           await _showLocalNotification(
@@ -1226,7 +1188,6 @@ class _RamassageListScreenState extends State<RamassageListScreen> {
             type: 'success',
           );
         } else {
-          print('❌ Échec de l\'annulation du ramassage: ${response.message}');
           // Envoyer une notification locale d'erreur
           await _showLocalNotification(
             title: '❌ Erreur',
@@ -1234,9 +1195,7 @@ class _RamassageListScreenState extends State<RamassageListScreen> {
             type: 'error',
           );
         }
-      } else {
-        print('❌ Annulation de ramassage échouée ou annulée');
-      }
+      } else {}
     }
   }
 

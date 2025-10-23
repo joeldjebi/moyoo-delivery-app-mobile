@@ -1,7 +1,7 @@
 // Constantes pour l'API
 class ApiConstants {
   // URL de base de l'API
-  static const String baseUrl = 'http://192.168.1.5:8000';
+  static const String baseUrl = 'http://192.168.1.4:8000';
 
   // Endpoints d'authentification
   static const String loginEndpoint = '/api/livreur/login';

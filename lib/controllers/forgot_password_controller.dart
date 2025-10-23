@@ -388,7 +388,9 @@ class ForgotPasswordController extends GetxController {
         // Afficher une notification locale de succès
         await LocalNotificationService().showSuccessNotification(
           title: 'Mot de passe modifié',
-          message: responseData['message'] ?? 'Votre mot de passe a été changé avec succès',
+          message:
+              responseData['message'] ??
+              'Votre mot de passe a été changé avec succès',
           payload: 'password_changed_success',
         );
 

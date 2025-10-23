@@ -19,32 +19,19 @@ class LocalNotificationStorageService {
   /// Obtenir toutes les notifications stockées
   Future<List<LocalNotification>> getAllNotifications() async {
     try {
-      print('📱 ===== RÉCUPÉRATION DES NOTIFICATIONS STOCKÉES =====');
-      print('📱 Accès à SharedPreferences...');
-
       final prefs = await SharedPreferences.getInstance();
       final notificationsJson = prefs.getStringList(_notificationsKey) ?? [];
-      print('📱 JSON brut récupéré: ${notificationsJson.length} éléments');
 
       final notifications =
           notificationsJson
               .map((json) => LocalNotification.fromMap(jsonDecode(json)))
               .toList();
-      print('📱 Notifications parsées: ${notifications.length}');
-      print(
-        '📱 IDs des notifications parsées: ${notifications.map((n) => n.id).toList()}',
-      );
 
       // Trier par date de réception (plus récentes en premier)
       notifications.sort((a, b) => b.receivedAt.compareTo(a.receivedAt));
-      print('📱 Notifications triées par date');
 
-      print(
-        '📱 ✅ ${notifications.length} notifications récupérées avec succès',
-      );
       return notifications;
     } catch (e) {
-      print('❌ Erreur lors de la récupération des notifications: $e');
       return [];
     }
   }
@@ -52,8 +39,6 @@ class LocalNotificationStorageService {
   /// Sauvegarder une notification
   Future<bool> saveNotification(LocalNotification notification) async {
     try {
-      print('📱 Sauvegarde de la notification: ${notification.title}');
-
       final prefs = await SharedPreferences.getInstance();
       final existingNotifications = await getAllNotifications();
 
@@ -65,11 +50,9 @@ class LocalNotificationStorageService {
       if (existingIndex != -1) {
         // Mettre à jour la notification existante
         existingNotifications[existingIndex] = notification;
-        print('📱 Notification mise à jour');
       } else {
         // Ajouter la nouvelle notification
         existingNotifications.insert(0, notification);
-        print('📱 Nouvelle notification ajoutée');
       }
 
       // Limiter le nombre de notifications stockées
@@ -79,7 +62,6 @@ class LocalNotificationStorageService {
           maxNotifications,
           existingNotifications.length,
         );
-        print('📱 Notifications limitées à $maxNotifications');
       }
 
       // Sauvegarder
@@ -87,10 +69,8 @@ class LocalNotificationStorageService {
           existingNotifications.map((n) => jsonEncode(n.toMap())).toList();
 
       await prefs.setStringList(_notificationsKey, notificationsJson);
-      print('✅ Notification sauvegardée avec succès');
       return true;
     } catch (e) {
-      print('❌ Erreur lors de la sauvegarde de la notification: $e');
       return false;
     }
   }
@@ -98,17 +78,8 @@ class LocalNotificationStorageService {
   /// Sauvegarder plusieurs notifications
   Future<bool> saveNotifications(List<LocalNotification> notifications) async {
     try {
-      print('📱 ===== SAUVEGARDE DES NOTIFICATIONS =====');
-      print('📱 Sauvegarde de ${notifications.length} notifications...');
-      print(
-        '📱 IDs des notifications à sauvegarder: ${notifications.map((n) => n.id).toList()}',
-      );
-
       final prefs = await SharedPreferences.getInstance();
       final existingNotifications = await getAllNotifications();
-      print(
-        '📱 Notifications existantes avant fusion: ${existingNotifications.length}',
-      );
 
       // Fusionner les notifications
       for (final notification in notifications) {
@@ -118,14 +89,10 @@ class LocalNotificationStorageService {
 
         if (existingIndex != -1) {
           existingNotifications[existingIndex] = notification;
-          print('📱 Notification ${notification.id} mise à jour');
         } else {
           existingNotifications.insert(0, notification);
-          print('📱 Notification ${notification.id} ajoutée');
         }
       }
-
-      print('📱 Notifications après fusion: ${existingNotifications.length}');
 
       // Limiter le nombre de notifications stockées
       final maxNotifications = await _getMaxNotifications();
@@ -134,20 +101,15 @@ class LocalNotificationStorageService {
           maxNotifications,
           existingNotifications.length,
         );
-        print('📱 Notifications limitées à $maxNotifications');
       }
 
       // Sauvegarder
       final notificationsJson =
           existingNotifications.map((n) => jsonEncode(n.toMap())).toList();
-      print('📱 JSON généré: ${notificationsJson.length} éléments');
 
       await prefs.setStringList(_notificationsKey, notificationsJson);
-      print('📱 Données sauvegardées dans SharedPreferences');
-      print('✅ ${notifications.length} notifications sauvegardées avec succès');
       return true;
     } catch (e) {
-      print('❌ Erreur lors de la sauvegarde des notifications: $e');
       return false;
     }
   }

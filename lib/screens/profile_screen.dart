@@ -138,7 +138,7 @@ class ProfileScreen extends StatelessWidget {
                   () => Text(
                     authController.livreurName.isNotEmpty
                         ? authController.livreurName
-                        : '+225 ${authController.livreurMobile}',
+                        : '${authController.livreurMobile}',
                     style: GoogleFonts.montserrat(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -162,7 +162,7 @@ class ProfileScreen extends StatelessWidget {
           Obx(
             () => Text(
               authController.currentLivreur.value?.email ??
-                  '+225 ${authController.livreurMobile}',
+                  '${authController.livreurMobile}',
               style: GoogleFonts.montserrat(
                 fontSize: 12,
                 color: Colors.grey.shade600,
