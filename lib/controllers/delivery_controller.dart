@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import '../models/delivery_models.dart';
 import '../services/delivery_service.dart';
 import 'auth_controller.dart';
+import 'location_controller.dart';
 
 class DeliveryController extends GetxController {
   // État des données
@@ -187,6 +188,17 @@ class DeliveryController extends GetxController {
       );
 
       if (response['success'] == true) {
+        // Démarrer le suivi de localisation si disponible
+        try {
+          if (Get.isRegistered<LocationController>()) {
+            final locationController = Get.find<LocationController>();
+            await locationController.startLocationTracking();
+            print('📍 Suivi de localisation démarré pour la livraison');
+          }
+        } catch (e) {
+          print('⚠️ Impossible de démarrer le suivi de localisation: $e');
+        }
+
         // Rafraîchir la liste de manière transparente
         await refreshColis();
         return true;
@@ -257,6 +269,17 @@ class DeliveryController extends GetxController {
       );
 
       if (response['success'] == true) {
+        // Arrêter le suivi de localisation si disponible
+        try {
+          if (Get.isRegistered<LocationController>()) {
+            final locationController = Get.find<LocationController>();
+            await locationController.stopLocationTracking();
+            print('📍 Suivi de localisation arrêté après livraison');
+          }
+        } catch (e) {
+          print('⚠️ Impossible d\'arrêter le suivi de localisation: $e');
+        }
+
         // Rafraîchir la liste de manière transparente
         await refreshColis();
         return true;

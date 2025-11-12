@@ -9,6 +9,7 @@ import '../models/delivery_models.dart';
 import '../services/notification_service.dart';
 import '../widgets/delivery_widgets.dart';
 import '../widgets/advanced_filter_widget.dart';
+import '../widgets/location_widget.dart';
 import 'delivery_details_screen.dart';
 import 'delivery_statistics_screen.dart';
 import 'complete_delivery_screen.dart';
@@ -407,6 +408,7 @@ class _DeliveryListScreenState extends State<DeliveryListScreen> {
   }
 
   void _showDeliveryDetails(Colis colis) {
+    print('🔍 [DeliveryList] _showDeliveryDetails() appelée');
     Get.to(
       () => DeliveryDetailsScreen(colisId: colis.id, codeColis: colis.code),
     );
@@ -659,6 +661,12 @@ class _DeliveryListScreenState extends State<DeliveryListScreen> {
       ),
       centerTitle: true,
       actions: [
+        // Indicateur de localisation
+        Container(
+          margin: const EdgeInsets.only(right: AppDimensions.spacingS),
+          child: const LocationIndicatorWidget(),
+        ),
+
         // Icône de statistiques
         IconButton(
           icon: Container(

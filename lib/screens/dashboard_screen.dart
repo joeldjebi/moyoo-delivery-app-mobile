@@ -24,6 +24,7 @@ import 'cancel_delivery_screen.dart';
 import 'notifications_screen.dart';
 import '../services/notification_manager_service.dart';
 import '../widgets/notification_badge_widget.dart';
+import '../widgets/location_widget.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -338,6 +339,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ],
       ),
       actions: [
+        // Indicateur de localisation
+        Container(
+          margin: const EdgeInsets.only(right: AppDimensions.spacingS),
+          child: const LocationIndicatorWidget(),
+        ),
+
+        // Bouton configuration
+        GestureDetector(
+          onTap: () {
+            Get.toNamed('/config');
+          },
+          child: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(Icons.settings, color: Colors.white, size: 20),
+          ),
+        ),
+
+        const SizedBox(width: AppDimensions.spacingS),
+
         // Bouton notifications
         GestureDetector(
           onTap: () {
@@ -695,7 +719,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           : null,
                 ),
                 child: Text(
-                  'Ramassages ($ramassagesTermines)',
+                  'Ramassages ($ramassagesTermines/$totalRamassages)',
                   textAlign: TextAlign.center,
                   style: GoogleFonts.montserrat(
                     fontSize: AppDimensions.fontSizeXS,

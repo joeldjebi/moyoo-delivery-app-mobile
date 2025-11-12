@@ -3,6 +3,7 @@ import '../services/ramassage_service.dart';
 import '../services/complete_ramassage_service.dart';
 import '../models/ramassage_models.dart';
 import 'auth_controller.dart';
+import 'location_controller.dart';
 
 class RamassageController extends GetxController {
   final _ramassages = <Ramassage>[].obs;
@@ -234,6 +235,17 @@ class RamassageController extends GetxController {
         // Mettre à jour le statut du ramassage dans la liste locale
         _updateRamassageStatus(ramassageId, response.message);
 
+        // Démarrer automatiquement le suivi de localisation
+        try {
+          final locationController = Get.find<LocationController>();
+          await locationController.startLocationTracking();
+          print(
+            '📍 Suivi de localisation démarré automatiquement pour le ramassage',
+          );
+        } catch (e) {
+          print('⚠️ Impossible de démarrer le suivi de localisation: $e');
+        }
+
         return true;
       } else {
         _errorMessage.value = response.message;
@@ -332,6 +344,17 @@ class RamassageController extends GetxController {
 
         // Mettre à jour le statut du ramassage dans la liste locale
         _updateRamassageStatus(ramassageId, response.message);
+
+        // Arrêter automatiquement le suivi de localisation
+        try {
+          final locationController = Get.find<LocationController>();
+          await locationController.stopLocationTracking();
+          print(
+            '📍 Suivi de localisation arrêté automatiquement après finalisation du ramassage',
+          );
+        } catch (e) {
+          print('⚠️ Impossible d\'arrêter le suivi de localisation: $e');
+        }
 
         return true;
       } else {

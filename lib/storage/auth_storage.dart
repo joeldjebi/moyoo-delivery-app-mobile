@@ -1,167 +1,171 @@
-import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/auth_models.dart';
-import 'memory_storage.dart';
 
+/// Service de stockage pour l'authentification
 class AuthStorage {
   static const String _tokenKey = 'auth_token';
   static const String _refreshTokenKey = 'refresh_token';
-  static const String _livreurKey = 'livreur_data';
-  static const String _isLoggedInKey = 'is_logged_in';
+  static const String _userIdKey = 'user_id';
+  static const String _userNameKey = 'user_name';
+  static const String _userEmailKey = 'user_email';
 
-  /// Sauvegarder les données d'authentification
-  static Future<void> saveAuthData(AuthData authData) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-
-      await prefs.setString(_tokenKey, authData.token);
-      await prefs.setString(_refreshTokenKey, authData.refreshToken);
-      await prefs.setString(_livreurKey, jsonEncode(authData.livreur.toJson()));
-      await prefs.setBool(_isLoggedInKey, true);
-    } catch (e) {
-      print('Erreur SharedPreferences, utilisation du stockage mémoire: $e');
-      // Fallback vers le stockage en mémoire
-      MemoryStorage.setString(_tokenKey, authData.token);
-      MemoryStorage.setString(_refreshTokenKey, authData.refreshToken);
-      MemoryStorage.setString(
-        _livreurKey,
-        jsonEncode(authData.livreur.toJson()),
-      );
-      MemoryStorage.setBool(_isLoggedInKey, true);
-    }
+  /// Sauvegarder le token d'authentification
+  static Future<void> saveToken(String token) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_tokenKey, token);
   }
 
   /// Récupérer le token d'authentification
   static Future<String?> getToken() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      return prefs.getString(_tokenKey);
-    } catch (e) {
-      print('Erreur SharedPreferences, utilisation du stockage mémoire: $e');
-      return MemoryStorage.getString(_tokenKey);
-    }
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_tokenKey);
+  }
+
+  /// Supprimer le token d'authentification
+  static Future<void> removeToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_tokenKey);
+  }
+
+  /// Sauvegarder le refresh token
+  static Future<void> saveRefreshToken(String refreshToken) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_refreshTokenKey, refreshToken);
   }
 
   /// Récupérer le refresh token
   static Future<String?> getRefreshToken() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      return prefs.getString(_refreshTokenKey);
-    } catch (e) {
-      print('Erreur SharedPreferences, utilisation du stockage mémoire: $e');
-      return MemoryStorage.getString(_refreshTokenKey);
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_refreshTokenKey);
+  }
+
+  /// Sauvegarder l'ID utilisateur
+  static Future<void> saveUserId(int userId) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_userIdKey, userId);
+  }
+
+  /// Récupérer l'ID utilisateur
+  static Future<int?> getUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_userIdKey);
+  }
+
+  /// Sauvegarder le nom utilisateur
+  static Future<void> saveUserName(String userName) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_userNameKey, userName);
+  }
+
+  /// Récupérer le nom utilisateur
+  static Future<String?> getUserName() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_userNameKey);
+  }
+
+  /// Sauvegarder l'email utilisateur
+  static Future<void> saveUserEmail(String userEmail) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_userEmailKey, userEmail);
+  }
+
+  /// Récupérer l'email utilisateur
+  static Future<String?> getUserEmail() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_userEmailKey);
+  }
+
+  /// Sauvegarder les données complètes d'authentification
+  static Future<void> saveAuthData(AuthData authData) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_tokenKey, authData.token);
+    await prefs.setString(_refreshTokenKey, authData.refreshToken);
+    await prefs.setInt(_userIdKey, authData.livreur.id);
+    await prefs.setString(_userNameKey, authData.livreur.nomComplet);
+    if (authData.livreur.email != null) {
+      await prefs.setString(_userEmailKey, authData.livreur.email!);
     }
   }
 
-  /// Récupérer les données du livreur
-  static Future<Livreur?> getLivreur() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final livreurJson = prefs.getString(_livreurKey);
+  /// Récupérer les données d'authentification complètes
+  static Future<AuthData?> getAuthData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString(_tokenKey);
+    final userId = prefs.getInt(_userIdKey);
+    final userName = prefs.getString(_userNameKey);
+    final userEmail = prefs.getString(_userEmailKey);
 
-      if (livreurJson != null) {
-        try {
-          final livreurData = jsonDecode(livreurJson);
-          return Livreur.fromJson(livreurData);
-        } catch (e) {
-          print('Erreur lors du décodage des données du livreur: $e');
-          return null;
-        }
-      }
+    if (token != null && userId != null && userName != null) {
+      final livreur = Livreur(
+        id: userId,
+        nomComplet: userName,
+        email: userEmail,
+        mobile: '', // À récupérer depuis l'API si nécessaire
+        status: 'actif', // Valeur par défaut
+      );
 
-      return null;
-    } catch (e) {
-      print('Erreur SharedPreferences, utilisation du stockage mémoire: $e');
-      final livreurJson = MemoryStorage.getString(_livreurKey);
-
-      if (livreurJson != null) {
-        try {
-          final livreurData = jsonDecode(livreurJson);
-          return Livreur.fromJson(livreurData);
-        } catch (e) {
-          print('Erreur lors du décodage des données du livreur (mémoire): $e');
-          return null;
-        }
-      }
-
-      return null;
+      return AuthData(
+        token: token,
+        refreshToken: '', // Valeur par défaut
+        tokenType: 'Bearer',
+        expiresIn: 3600,
+        refreshExpiresIn: 7200,
+        livreur: livreur,
+      );
     }
+    return null;
+  }
+
+  /// Mettre à jour les informations du livreur
+  static Future<void> updateLivreur(Livreur livreur) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_userNameKey, livreur.nomComplet);
+    if (livreur.email != null) {
+      await prefs.setString(_userEmailKey, livreur.email!);
+    }
+  }
+
+  /// Récupérer le livreur stocké
+  static Future<Livreur?> getLivreur() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getInt(_userIdKey);
+    final userName = prefs.getString(_userNameKey);
+    final userEmail = prefs.getString(_userEmailKey);
+
+    if (userId != null && userName != null) {
+      return Livreur(
+        id: userId,
+        nomComplet: userName,
+        email: userEmail,
+        mobile: '', // À récupérer depuis l'API si nécessaire
+        status: 'actif', // Valeur par défaut
+      );
+    }
+    return null;
+  }
+
+  /// Nettoyer toutes les données d'authentification
+  static Future<void> clearAuthData() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_tokenKey);
+    await prefs.remove(_refreshTokenKey);
+    await prefs.remove(_userIdKey);
+    await prefs.remove(_userNameKey);
+    await prefs.remove(_userEmailKey);
   }
 
   /// Vérifier si l'utilisateur est connecté
   static Future<bool> isLoggedIn() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      return prefs.getBool(_isLoggedInKey) ?? false;
-    } catch (e) {
-      print('Erreur SharedPreferences, utilisation du stockage mémoire: $e');
-      return MemoryStorage.getBool(_isLoggedInKey) ?? false;
-    }
+    final token = await getToken();
+    return token != null && token.isNotEmpty;
   }
 
-  /// Mettre à jour le token
-  static Future<void> updateToken(String newToken) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_tokenKey, newToken);
-    } catch (e) {
-      print('Erreur lors de la mise à jour du token: $e');
-    }
-  }
-
-  /// Mettre à jour les données du livreur
-  static Future<void> updateLivreur(Livreur livreur) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_livreurKey, jsonEncode(livreur.toJson()));
-    } catch (e) {
-      print('Erreur lors de la mise à jour des données du livreur: $e');
-    }
-  }
-
-  /// Supprimer toutes les données d'authentification
-  static Future<void> clearAuthData() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-
-      await prefs.remove(_tokenKey);
-      await prefs.remove(_refreshTokenKey);
-      await prefs.remove(_livreurKey);
-      await prefs.setBool(_isLoggedInKey, false);
-    } catch (e) {
-      print('Erreur SharedPreferences, nettoyage du stockage mémoire: $e');
-    }
-
-    // Nettoyer aussi le stockage mémoire
-    MemoryStorage.remove(_tokenKey);
-    MemoryStorage.remove(_refreshTokenKey);
-    MemoryStorage.remove(_livreurKey);
-    MemoryStorage.setBool(_isLoggedInKey, false);
-  }
-
-  /// Vérifier si le token est expiré
-  static Future<bool> isTokenExpired() async {
-    try {
-      final token = await getToken();
-      if (token == null) return true;
-
-      // Décoder le JWT pour vérifier l'expiration
-      final parts = token.split('.');
-      if (parts.length != 3) return true;
-
-      final payload = parts[1];
-      final normalized = base64Url.normalize(payload);
-      final resp = utf8.decode(base64Url.decode(normalized));
-      final payloadMap = jsonDecode(resp);
-
-      final exp = payloadMap['exp'] as int?;
-      if (exp == null) return true;
-
-      final expirationDate = DateTime.fromMillisecondsSinceEpoch(exp * 1000);
-      return DateTime.now().isAfter(expirationDate);
-    } catch (e) {
-      print('Erreur lors de la vérification de l\'expiration du token: $e');
-      return true;
-    }
+  /// Déconnexion complète
+  static Future<void> logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_tokenKey);
+    await prefs.remove(_userIdKey);
+    await prefs.remove(_userNameKey);
+    await prefs.remove(_userEmailKey);
   }
 }

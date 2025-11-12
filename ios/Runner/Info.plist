@@ -30,6 +30,12 @@
 	<string>Cette application a besoin d'accéder à la caméra pour prendre des photos de profil.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Cette application a besoin d'accéder à la galerie pour sélectionner des photos de profil.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Cette application a besoin d'accéder à votre position pour suivre les livraisons en temps réel.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Cette application a besoin d'accéder à votre position pour suivre les livraisons en temps réel, même en arrière-plan.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Cette application a besoin d'accéder à votre position pour suivre les livraisons en temps réel, même en arrière-plan.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>

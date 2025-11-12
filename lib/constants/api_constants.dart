@@ -1,7 +1,7 @@
 // Constantes pour l'API
 class ApiConstants {
   // URL de base de l'API
-  static const String baseUrl = 'http://192.168.1.4:8000';
+  static const String baseUrl = 'http://192.168.1.2:8000';
 
   // Endpoints d'authentification
   static const String loginEndpoint = '/api/livreur/login';
@@ -25,6 +25,18 @@ class ApiConstants {
       '/api/livreur/ramassages/{id}/start';
   static const String completePickupEndpoint =
       '/api/livreur/ramassages/{id}/complete';
+
+  // Endpoints de localisation
+  static const String locationUpdateEndpoint = '/api/livreur/location/update';
+  static const String locationHistoryEndpoint = '/api/livreur/location/history';
+  static const String locationStatusEndpoint = '/api/livreur/location/status';
+  static const String currentMissionEndpoint =
+      '/api/livreur/location/current-mission';
+  static const String missionHistoryEndpoint =
+      '/api/livreur/location/mission-history';
+
+  // Socket.IO Configuration
+  static const String socketUrl = 'http://192.168.1.2:3000';
 
   // Timeouts
   static const Duration connectTimeout = Duration(seconds: 30);

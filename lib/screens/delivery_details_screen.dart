@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:get/get.dart';
@@ -13,6 +14,7 @@ import '../controllers/delivery_controller.dart';
 import '../widgets/formatted_amount_widget.dart';
 import '../widgets/clickable_phone_widget.dart';
 import '../widgets/app_button.dart';
+import '../widgets/location_widget.dart';
 import 'complete_delivery_screen.dart';
 import 'cancel_delivery_screen.dart';
 
@@ -56,6 +58,9 @@ class _DeliveryDetailsScreenState extends State<DeliveryDetailsScreen> {
 
   Future<void> _loadColisDetails() async {
     try {
+      print(
+        '🔍 [DeliveryDetails] _loadColisDetails() - Début, colisId: ${widget.colisId}',
+      );
       setState(() {
         _isLoading = true;
         _errorMessage = '';
@@ -65,25 +70,48 @@ class _DeliveryDetailsScreenState extends State<DeliveryDetailsScreen> {
       final token = authController.authToken;
 
       if (token.isEmpty) {
+        print('❌ [DeliveryDetails] Token manquant');
         throw Exception('Token d\'authentification manquant');
       }
 
+      print('🔍 [DeliveryDetails] Appel à DeliveryService.getColisDetails()');
       final response = await DeliveryService.getColisDetails(
         colisId: widget.colisId,
         token: token,
       );
 
-      if (response.success) {
+      print('🔍 [DeliveryDetails] Réponse reçue:');
+      print('   - success: ${response.success}');
+      print('   - message: ${response.message}');
+      print('   - data.id: ${response.data.id}');
+      print('   - data.status: ${response.data.status}');
+      print('   - data.code: ${response.data.code}');
+
+      // Si la réponse est réussie OU si les données sont présentes (même si success est false)
+      // Cela permet d'afficher les détails même pour les colis livrés qui pourraient avoir success: false
+      if (response.success || response.data.id > 0) {
+        print('✅ [DeliveryDetails] Données valides, affichage du contenu');
         setState(() {
           _colisDetail = response.data;
           _isLoading = false;
+          _errorMessage = ''; // S'assurer que le message d'erreur est vidé
         });
       } else {
-        throw Exception(response.message);
+        // Si success est false ET qu'il n'y a pas de données valides
+        print(
+          '❌ [DeliveryDetails] Données invalides: success=${response.success}, id=${response.data.id}',
+        );
+        throw Exception(
+          response.message.isNotEmpty
+              ? response.message
+              : 'Impossible de charger les détails du colis',
+        );
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print('❌ [DeliveryDetails] Erreur lors du chargement: $e');
+      print('❌ [DeliveryDetails] Stack trace: $stackTrace');
       setState(() {
-        _errorMessage = e.toString();
+        _errorMessage = e.toString().replaceAll('Exception: ', '');
         _isLoading = false;
       });
     }
@@ -160,6 +188,13 @@ class _DeliveryDetailsScreenState extends State<DeliveryDetailsScreen> {
         ],
       ),
       centerTitle: true,
+      actions: [
+        // Indicateur de localisation
+        Container(
+          margin: const EdgeInsets.only(right: AppDimensions.spacingM),
+          child: const LocationIndicatorWidget(),
+        ),
+      ],
     );
   }
 
@@ -311,6 +346,12 @@ class _DeliveryDetailsScreenState extends State<DeliveryDetailsScreen> {
 
           // Historique de livraison
           _buildHistoryCard(colis),
+
+          // Preuves de livraison (photo et signature) - uniquement si livré
+          if (colis.status == 2) ...[
+            const SizedBox(height: AppDimensions.spacingS),
+            _buildProofCard(colis),
+          ],
 
           const SizedBox(height: AppDimensions.spacingM),
         ],
@@ -1342,6 +1383,477 @@ class _DeliveryDetailsScreenState extends State<DeliveryDetailsScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildProofCard(ColisDetail colis) {
+    final historique = colis.historiqueLivraison;
+
+    print(
+      '🔍 [DeliveryDetails] _buildProofCard - photoProofPaths: ${historique.photoProofPaths}',
+    );
+    print(
+      '🔍 [DeliveryDetails] _buildProofCard - photoProofPaths != null: ${historique.photoProofPaths != null}',
+    );
+    if (historique.photoProofPaths != null) {
+      print(
+        '🔍 [DeliveryDetails] _buildProofCard - photoProofPaths.length: ${historique.photoProofPaths!.length}',
+      );
+      print(
+        '🔍 [DeliveryDetails] _buildProofCard - photoProofPaths.isNotEmpty: ${historique.photoProofPaths!.isNotEmpty}',
+      );
+    }
+
+    final hasPhoto =
+        historique.photoProofPaths != null &&
+        historique.photoProofPaths!.isNotEmpty;
+    final hasSignature =
+        historique.signatureData != null &&
+        historique.signatureData!.isNotEmpty;
+
+    print(
+      '🔍 [DeliveryDetails] _buildProofCard - hasPhoto: $hasPhoto, hasSignature: $hasSignature',
+    );
+
+    // Si aucune preuve n'est disponible, ne pas afficher la carte
+    if (!hasPhoto && !hasSignature) {
+      print(
+        '⚠️ [DeliveryDetails] _buildProofCard - Aucune preuve disponible, carte masquée',
+      );
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.success.withOpacity(0.08),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+            spreadRadius: 0,
+          ),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // En-tête avec gradient
+          Container(
+            padding: const EdgeInsets.all(AppDimensions.spacingM),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  AppColors.success.withOpacity(0.1),
+                  AppColors.success.withOpacity(0.05),
+                ],
+              ),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(AppDimensions.radiusL),
+                topRight: Radius.circular(AppDimensions.radiusL),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(AppDimensions.spacingS),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        AppColors.success,
+                        AppColors.success.withOpacity(0.8),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusS),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.success.withOpacity(0.3),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.verified,
+                    color: Colors.white,
+                    size: 18,
+                  ),
+                ),
+                const SizedBox(width: AppDimensions.spacingS),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Preuves de livraison',
+                        style: GoogleFonts.montserrat(
+                          fontSize: AppDimensions.fontSizeM,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: AppDimensions.spacingXS),
+                      Text(
+                        'Photo et signature',
+                        style: GoogleFonts.montserrat(
+                          fontSize: AppDimensions.fontSizeXS,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Contenu
+          Padding(
+            padding: const EdgeInsets.all(AppDimensions.spacingM),
+            child: Column(
+              children: [
+                // Photos de preuve
+                if (hasPhoto) ...[
+                  _buildPhotoProofs(historique.photoProofPaths!),
+                  const SizedBox(height: AppDimensions.spacingM),
+                ],
+                // Signature
+                if (hasSignature) ...[
+                  _buildSignature(historique.signatureData!),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPhotoProofs(List<String> photoPaths) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          photoPaths.length == 1
+              ? 'Photo de preuve'
+              : 'Photos de preuve (${photoPaths.length})',
+          style: GoogleFonts.montserrat(
+            fontSize: AppDimensions.fontSizeS,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: AppDimensions.spacingS),
+        // Si une seule photo, afficher en grand
+        if (photoPaths.length == 1)
+          _buildSinglePhoto(photoPaths[0])
+        else
+          // Si plusieurs photos, afficher en grille
+          _buildPhotoGrid(photoPaths),
+      ],
+    );
+  }
+
+  Widget _buildSinglePhoto(String photoPath) {
+    // Construire l'URL complète
+    final photoUrl =
+        photoPath.startsWith('http')
+            ? photoPath
+            : 'http://192.168.1.8:8000/storage/$photoPath';
+
+    return GestureDetector(
+      onTap: () => _showPhotoFullScreen(photoUrl),
+      child: Container(
+        height: 200,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+          border: Border.all(
+            color: AppColors.border.withOpacity(0.2),
+            width: 1,
+          ),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+          child: Image.network(
+            photoUrl,
+            fit: BoxFit.cover,
+            width: double.infinity,
+            loadingBuilder: (context, child, loadingProgress) {
+              if (loadingProgress == null) return child;
+              return Container(
+                color: Colors.grey.shade100,
+                child: const Center(
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              );
+            },
+            errorBuilder: (context, error, stackTrace) {
+              return Container(
+                color: Colors.grey.shade100,
+                child: const Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.error_outline, color: Colors.grey, size: 32),
+                      SizedBox(height: AppDimensions.spacingS),
+                      Text(
+                        'Erreur de chargement',
+                        style: TextStyle(color: Colors.grey, fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPhotoGrid(List<String> photoPaths) {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: AppDimensions.spacingS,
+        mainAxisSpacing: AppDimensions.spacingS,
+        childAspectRatio: 1.0,
+      ),
+      itemCount: photoPaths.length,
+      itemBuilder: (context, index) {
+        final photoPath = photoPaths[index];
+        // Construire l'URL complète
+        final photoUrl =
+            photoPath.startsWith('http')
+                ? photoPath
+                : 'http://192.168.1.8:8000/storage/$photoPath';
+
+        return GestureDetector(
+          onTap: () => _showPhotoFullScreen(photoUrl),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+              border: Border.all(
+                color: AppColors.border.withOpacity(0.2),
+                width: 1,
+              ),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Image.network(
+                    photoUrl,
+                    fit: BoxFit.cover,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Container(
+                        color: Colors.grey.shade100,
+                        child: const Center(
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      );
+                    },
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: Colors.grey.shade100,
+                        child: const Center(
+                          child: Icon(
+                            Icons.error_outline,
+                            color: Colors.grey,
+                            size: 24,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  // Badge avec numéro si plusieurs photos
+                  if (photoPaths.length > 1)
+                    Positioned(
+                      top: 4,
+                      right: 4,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.6),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          '${index + 1}',
+                          style: GoogleFonts.montserrat(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSignature(String signatureData) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Signature',
+          style: GoogleFonts.montserrat(
+            fontSize: AppDimensions.fontSizeS,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: AppDimensions.spacingS),
+        Container(
+          height: 150,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+            border: Border.all(
+              color: AppColors.border.withOpacity(0.2),
+              width: 1,
+            ),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+            child: _buildSignatureImage(signatureData),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSignatureImage(String signatureData) {
+    // Si la signature est en base64, la décoder
+    if (signatureData.startsWith('data:image')) {
+      // Format data:image/png;base64,...
+      final base64String = signatureData.split(',').last;
+      try {
+        final bytes = base64Decode(base64String);
+        return Image.memory(bytes, fit: BoxFit.contain);
+      } catch (e) {
+        print('❌ Erreur lors du décodage de la signature: $e');
+      }
+    } else if (signatureData.startsWith('http')) {
+      // URL complète
+      return Image.network(
+        signatureData,
+        fit: BoxFit.contain,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return const Center(child: CircularProgressIndicator(strokeWidth: 2));
+        },
+        errorBuilder: (context, error, stackTrace) {
+          return const Center(
+            child: Icon(Icons.error_outline, color: Colors.grey, size: 32),
+          );
+        },
+      );
+    } else {
+      // Essayer de traiter comme base64 pur
+      try {
+        final bytes = base64Decode(signatureData);
+        return Image.memory(bytes, fit: BoxFit.contain);
+      } catch (e) {
+        print('❌ Erreur lors du décodage de la signature base64: $e');
+      }
+    }
+
+    // Par défaut, afficher un message d'erreur
+    return Container(
+      color: Colors.grey.shade100,
+      child: const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, color: Colors.grey, size: 32),
+            SizedBox(height: AppDimensions.spacingS),
+            Text(
+              'Signature non disponible',
+              style: TextStyle(color: Colors.grey, fontSize: 12),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showPhotoFullScreen(String photoUrl) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.black,
+          child: Stack(
+            children: [
+              // Image en plein écran
+              Center(
+                child: InteractiveViewer(
+                  minScale: 0.5,
+                  maxScale: 4.0,
+                  child: Image.network(
+                    photoUrl,
+                    fit: BoxFit.contain,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return const Center(
+                        child: CircularProgressIndicator(color: Colors.white),
+                      );
+                    },
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.error_outline,
+                              color: Colors.white,
+                              size: 48,
+                            ),
+                            SizedBox(height: 16),
+                            Text(
+                              'Erreur de chargement de l\'image',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+              // Bouton de fermeture
+              Positioned(
+                top: 10,
+                right: 10,
+                child: IconButton(
+                  icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
