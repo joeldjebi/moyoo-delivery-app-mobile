@@ -469,21 +469,12 @@ class NotificationService {
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   try {
-    print('📱 ===== MESSAGE REÇU EN ARRIÈRE-PLAN =====');
-    print('📱 Message ID: ${message.messageId}');
-    print('📱 Titre: ${message.notification?.title}');
-    print('📱 Corps: ${message.notification?.body}');
-    print('📱 Data: ${message.data}');
-    print('📱 From: ${message.from}');
-
     // Assurez-vous que Firebase est initialisé même en arrière-plan
     await Firebase.initializeApp();
-    print('✅ Firebase initialisé en arrière-plan');
 
     // Initialiser le gestionnaire de notifications
     final notificationManager = NotificationManagerService();
     await notificationManager.initialize();
-    print('✅ Gestionnaire de notifications initialisé en arrière-plan');
 
     // Créer et sauvegarder la notification locale
     final localNotification = LocalNotification.fromRemoteMessage(message);
@@ -495,7 +486,6 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
       imageUrl: localNotification.imageUrl,
       actionUrl: localNotification.actionUrl,
     );
-    print('✅ Notification sauvegardée en arrière-plan');
 
     // Analyser le message pour déterminer le type
     final title = message.notification?.title ?? '';
@@ -508,7 +498,6 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
         data['type'] == 'ramassage') {
       // En arrière-plan, on peut stocker un flag pour actualiser au retour au premier plan
       _storeRefreshFlag('ramassage');
-      print('✅ Flag de ramassage stocké');
     }
 
     // Vérifier si c'est une notification de livraison (mots-clés étendus)
@@ -525,13 +514,8 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
         data['type'] == 'delivery' ||
         data['type'] == 'colis') {
       _storeRefreshFlag('delivery');
-      print('✅ Flag de livraison stocké');
     }
-
-    print('✅ Message en arrière-plan traité avec succès');
-  } catch (e) {
-    print('❌ Erreur lors du traitement du message en arrière-plan: $e');
-  }
+  } catch (e) {}
 }
 
 /// Stocker un flag pour actualiser les listes au retour au premier plan

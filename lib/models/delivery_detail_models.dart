@@ -233,60 +233,28 @@ class HistoriqueLivraison {
     List<String>? photoProofPaths;
     final photoProofPathData = json['photo_proof_path'];
 
-    if (photoProofPathData != null) {
-      print(
-        '🔍 [HistoriqueLivraison] photo_proof_path type: ${photoProofPathData.runtimeType}',
-      );
-      print(
-        '🔍 [HistoriqueLivraison] photo_proof_path value: $photoProofPathData',
-      );
-    }
+    if (photoProofPathData != null) {}
 
     if (photoProofPathData != null) {
       if (photoProofPathData is List) {
         // C'est un tableau
-        print(
-          '🔍 [HistoriqueLivraison] photo_proof_path est un tableau de ${photoProofPathData.length} éléments',
-        );
         final filteredPaths =
             photoProofPathData
                 .map((e) => e?.toString() ?? '')
                 .where((e) => e.isNotEmpty)
                 .toList();
-        print(
-          '🔍 [HistoriqueLivraison] photoProofPaths après filtrage: $filteredPaths',
-        );
         // Ne garder que si le tableau filtré n'est pas vide
         if (filteredPaths.isNotEmpty) {
           photoProofPaths = filteredPaths;
         } else {
-          print(
-            '⚠️ [HistoriqueLivraison] Tous les éléments du tableau sont vides',
-          );
           photoProofPaths = null;
         }
       } else if (photoProofPathData is String) {
         // C'est une chaîne unique
-        print(
-          '🔍 [HistoriqueLivraison] photo_proof_path est une chaîne: $photoProofPathData',
-        );
         if (photoProofPathData.isNotEmpty) {
           photoProofPaths = [photoProofPathData];
-          print(
-            '🔍 [HistoriqueLivraison] photoProofPaths créé: $photoProofPaths',
-          );
-        } else {
-          print(
-            '⚠️ [HistoriqueLivraison] photo_proof_path est une chaîne vide',
-          );
         }
-      } else {
-        print(
-          '⚠️ [HistoriqueLivraison] photo_proof_path type inattendu: ${photoProofPathData.runtimeType}',
-        );
       }
-    } else {
-      print('⚠️ [HistoriqueLivraison] photo_proof_path est null');
     }
 
     return HistoriqueLivraison(

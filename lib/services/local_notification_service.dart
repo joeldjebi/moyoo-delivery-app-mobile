@@ -42,17 +42,11 @@ class LocalNotificationService {
       );
 
       _isInitialized = true;
-      print('✅ LocalNotificationService initialisé avec succès');
-    } catch (e) {
-      print(
-        '❌ Erreur lors de l\'initialisation de LocalNotificationService: $e',
-      );
-    }
+    } catch (e) {}
   }
 
   /// Gère le tap sur une notification
   void _onNotificationTapped(NotificationResponse response) {
-    print('🔔 Notification tapée: ${response.payload}');
     // Ici on peut ajouter de la logique pour naviguer vers une page spécifique
   }
 
@@ -162,10 +156,7 @@ class LocalNotificationService {
         notificationDetails,
         payload: payload,
       );
-
-      print('✅ Notification affichée: $title - $message');
     } catch (e) {
-      print('❌ Erreur lors de l\'affichage de la notification: $e');
       // Fallback vers snackbar en cas d'erreur
       _showFallbackSnackbar(title, message, type);
     }

@@ -86,13 +86,11 @@ class _CompleteDeliveryScreenState extends State<CompleteDeliveryScreen> {
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
-          print('❌ Permissions de localisation refusées');
           return;
         }
       }
 
       if (permission == LocationPermission.deniedForever) {
-        print('❌ Permissions de localisation définitivement refusées');
         await LocalNotificationService().showWarningNotification(
           title: 'Permissions requises',
           message:
@@ -112,11 +110,7 @@ class _CompleteDeliveryScreenState extends State<CompleteDeliveryScreen> {
         _latitude = position.latitude;
         _longitude = position.longitude;
       });
-      print('📍 Position obtenue: $_latitude, $_longitude');
-    } catch (e) {
-      print('❌ Erreur lors de la récupération de la position: $e');
-      // Ne pas afficher d'erreur à l'utilisateur, la géolocalisation est optionnelle
-    }
+    } catch (e) {}
   }
 
   void _showNoteSelectionModal() {
@@ -303,7 +297,6 @@ class _CompleteDeliveryScreenState extends State<CompleteDeliveryScreen> {
         });
       }
     } catch (e) {
-      print('❌ Erreur lors de la sélection de la photo: $e');
       await LocalNotificationService().showErrorNotification(
         title: 'Erreur',
         message: 'Erreur lors de la sélection de la photo',
@@ -337,7 +330,6 @@ class _CompleteDeliveryScreenState extends State<CompleteDeliveryScreen> {
         );
       }
     } catch (e) {
-      print('❌ Erreur lors de la capture de la signature: $e');
       await LocalNotificationService().showErrorNotification(
         title: 'Erreur',
         message: 'Erreur lors de la capture de la signature',
@@ -348,7 +340,6 @@ class _CompleteDeliveryScreenState extends State<CompleteDeliveryScreen> {
 
   void _navigateBackToOrigin() {
     final fromPage = widget.fromPage;
-    print('🔍 Retour à la page d\'origine: $fromPage');
 
     if (fromPage == 'dashboard') {
       // Retourner au dashboard avec l'onglet Livraisons actif
@@ -436,7 +427,6 @@ class _CompleteDeliveryScreenState extends State<CompleteDeliveryScreen> {
         );
       }
     } catch (e) {
-      print('❌ Erreur lors de la finalisation de la livraison: $e');
       await LocalNotificationService().showErrorNotification(
         title: 'Erreur',
         message: 'Erreur lors de la finalisation de la livraison: $e',

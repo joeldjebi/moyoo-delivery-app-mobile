@@ -119,13 +119,8 @@ class _DeliveryListScreenState extends State<DeliveryListScreen> {
   /// Vérifier les flags d'actualisation des notifications
   void _checkNotificationRefreshFlags() {
     try {
-      print(
-        '🔄 Vérification des flags d\'actualisation des notifications (DeliveryListScreen)',
-      );
       NotificationService.checkAndProcessRefreshFlags();
-    } catch (e) {
-      print('❌ Erreur lors de la vérification des flags: $e');
-    }
+    } catch (e) {}
   }
 
   void _filterDeliveries({bool loadInitialItems = false}) {
@@ -408,7 +403,6 @@ class _DeliveryListScreenState extends State<DeliveryListScreen> {
   }
 
   void _showDeliveryDetails(Colis colis) {
-    print('🔍 [DeliveryList] _showDeliveryDetails() appelée');
     Get.to(
       () => DeliveryDetailsScreen(colisId: colis.id, codeColis: colis.code),
     );
@@ -477,24 +471,17 @@ class _DeliveryListScreenState extends State<DeliveryListScreen> {
   }
 
   void _showAdvancedFilter() {
-    print('🔍 [DeliveryList] _showAdvancedFilter() appelée');
-    print(
-      '🔍 [DeliveryList] Nombre total de colis: ${_deliveryController.colis.length}',
-    );
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (BuildContext context) {
-        print('🔍 [DeliveryList] Construction du AdvancedFilterWidget');
         return AdvancedFilterWidget(
           allColis: _deliveryController.colis,
           onFilterApplied: _onAdvancedFilterApplied,
         );
       },
     );
-    print('🔍 [DeliveryList] showModalBottomSheet appelé');
   }
 
   void _onAdvancedFilterApplied(
@@ -506,15 +493,6 @@ class _DeliveryListScreenState extends State<DeliveryListScreen> {
     DateTime? endDate,
     bool showStatistics,
   ) {
-    print('🔍 [DeliveryList] _onAdvancedFilterApplied() appelée');
-    print('🔍 [DeliveryList] Nombre de colis filtrés: ${filteredColis.length}');
-    print('🔍 [DeliveryList] Type: $deliveryType');
-    print('🔍 [DeliveryList] Statut: $status');
-    print('🔍 [DeliveryList] Période: $period');
-    print('🔍 [DeliveryList] Date début: $startDate');
-    print('🔍 [DeliveryList] Date fin: $endDate');
-    print('🔍 [DeliveryList] Afficher statistiques: $showStatistics');
-
     setState(() {
       _selectedDeliveryType = deliveryType;
       _selectedStatus = status;
@@ -526,33 +504,17 @@ class _DeliveryListScreenState extends State<DeliveryListScreen> {
       _filteredColis = filteredColis;
     });
 
-    print('🔍 [DeliveryList] setState() terminé');
-    print('🔍 [DeliveryList] _hasAdvancedFilter: $_hasAdvancedFilter');
-    print('🔍 [DeliveryList] _filteredColis.length: ${_filteredColis.length}');
-
     // Redirection conditionnelle vers la page de statistiques
     if (showStatistics) {
-      print(
-        '🔍 [DeliveryList] showStatistics = true, appel de _navigateToStatistics() avec délai',
-      );
       // Ajouter un petit délai pour s'assurer que le modal est fermé
       Future.delayed(const Duration(milliseconds: 100), () {
-        print(
-          '🔍 [DeliveryList] Délai écoulé, navigation vers les statistiques',
-        );
         _navigateToStatistics();
       });
-    } else {
-      print('🔍 [DeliveryList] showStatistics = false, pas de redirection');
-    }
+    } else {}
   }
 
   void _navigateToStatistics() {
-    print('🔍 [DeliveryList] _navigateToStatistics() appelée');
-    print('🔍 [DeliveryList] _filteredColis.length: ${_filteredColis.length}');
-
     if (_filteredColis.isEmpty) {
-      print('🔍 [DeliveryList] Liste vide, affichage du snackbar');
       Get.snackbar(
         'Aucune donnée',
         'Aucune livraison trouvée pour afficher les statistiques',
@@ -561,17 +523,6 @@ class _DeliveryListScreenState extends State<DeliveryListScreen> {
       );
       return;
     }
-
-    print('🔍 [DeliveryList] Navigation vers DeliveryStatisticsScreen');
-    print('🔍 [DeliveryList] Paramètres:');
-    print(
-      '🔍 [DeliveryList] - filteredColis: ${_filteredColis.length} éléments',
-    );
-    print('🔍 [DeliveryList] - selectedDeliveryType: $_selectedDeliveryType');
-    print('🔍 [DeliveryList] - selectedStatus: $_selectedStatus');
-    print('🔍 [DeliveryList] - selectedPeriod: $_selectedPeriod');
-    print('🔍 [DeliveryList] - startDate: $_startDate');
-    print('🔍 [DeliveryList] - endDate: $_endDate');
 
     Get.to(
       () => DeliveryStatisticsScreen(
@@ -583,7 +534,6 @@ class _DeliveryListScreenState extends State<DeliveryListScreen> {
         endDate: _endDate,
       ),
     );
-    print('🔍 [DeliveryList] Get.to() appelé');
   }
 
   void _showStatistics() {

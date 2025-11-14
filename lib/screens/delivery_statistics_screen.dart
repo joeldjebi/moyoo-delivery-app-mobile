@@ -25,23 +25,8 @@ class DeliveryStatisticsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print('🔍 [DeliveryStatistics] build() appelé');
-    print(
-      '🔍 [DeliveryStatistics] filteredColis.length: ${filteredColis.length}',
-    );
-    print(
-      '🔍 [DeliveryStatistics] selectedDeliveryType: $selectedDeliveryType',
-    );
-    print('🔍 [DeliveryStatistics] selectedStatus: $selectedStatus');
-    print('🔍 [DeliveryStatistics] selectedPeriod: $selectedPeriod');
-    print('🔍 [DeliveryStatistics] startDate: $startDate');
-    print('🔍 [DeliveryStatistics] endDate: $endDate');
-
     // Calculer les statistiques
     final statistics = _calculateStatistics();
-    print(
-      '🔍 [DeliveryStatistics] Statistiques calculées: ${statistics.toString()}',
-    );
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),

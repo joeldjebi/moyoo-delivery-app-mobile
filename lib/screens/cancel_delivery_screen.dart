@@ -467,7 +467,6 @@ class _CancelDeliveryScreenState extends State<CancelDeliveryScreen> {
         );
       }
     } catch (e) {
-      print('❌ Erreur lors de l\'annulation de la livraison: $e');
       await LocalNotificationService().showErrorNotification(
         title: 'Erreur',
         message: 'Erreur lors de l\'annulation de la livraison: $e',
@@ -482,7 +481,6 @@ class _CancelDeliveryScreenState extends State<CancelDeliveryScreen> {
 
   void _navigateBackToOrigin() {
     final fromPage = widget.fromPage;
-    print('🔍 Retour à la page d\'origine: $fromPage');
 
     if (fromPage == 'dashboard') {
       // Retourner au dashboard avec l'onglet Livraisons actif

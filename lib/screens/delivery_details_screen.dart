@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_dimensions.dart';
+import '../constants/api_constants.dart';
 import '../models/delivery_detail_models.dart';
 import '../services/delivery_service.dart';
 import '../services/notification_service.dart';
@@ -47,20 +48,12 @@ class _DeliveryDetailsScreenState extends State<DeliveryDetailsScreen> {
   /// Vérifier les flags d'actualisation des notifications
   void _checkNotificationRefreshFlags() {
     try {
-      print(
-        '🔄 Vérification des flags d\'actualisation des notifications (DeliveryDetailsScreen)',
-      );
       NotificationService.checkAndProcessRefreshFlags();
-    } catch (e) {
-      print('❌ Erreur lors de la vérification des flags: $e');
-    }
+    } catch (e) {}
   }
 
   Future<void> _loadColisDetails() async {
     try {
-      print(
-        '🔍 [DeliveryDetails] _loadColisDetails() - Début, colisId: ${widget.colisId}',
-      );
       setState(() {
         _isLoading = true;
         _errorMessage = '';
@@ -70,27 +63,17 @@ class _DeliveryDetailsScreenState extends State<DeliveryDetailsScreen> {
       final token = authController.authToken;
 
       if (token.isEmpty) {
-        print('❌ [DeliveryDetails] Token manquant');
         throw Exception('Token d\'authentification manquant');
       }
 
-      print('🔍 [DeliveryDetails] Appel à DeliveryService.getColisDetails()');
       final response = await DeliveryService.getColisDetails(
         colisId: widget.colisId,
         token: token,
       );
 
-      print('🔍 [DeliveryDetails] Réponse reçue:');
-      print('   - success: ${response.success}');
-      print('   - message: ${response.message}');
-      print('   - data.id: ${response.data.id}');
-      print('   - data.status: ${response.data.status}');
-      print('   - data.code: ${response.data.code}');
-
       // Si la réponse est réussie OU si les données sont présentes (même si success est false)
       // Cela permet d'afficher les détails même pour les colis livrés qui pourraient avoir success: false
       if (response.success || response.data.id > 0) {
-        print('✅ [DeliveryDetails] Données valides, affichage du contenu');
         setState(() {
           _colisDetail = response.data;
           _isLoading = false;
@@ -98,9 +81,6 @@ class _DeliveryDetailsScreenState extends State<DeliveryDetailsScreen> {
         });
       } else {
         // Si success est false ET qu'il n'y a pas de données valides
-        print(
-          '❌ [DeliveryDetails] Données invalides: success=${response.success}, id=${response.data.id}',
-        );
         throw Exception(
           response.message.isNotEmpty
               ? response.message
@@ -108,8 +88,6 @@ class _DeliveryDetailsScreenState extends State<DeliveryDetailsScreen> {
         );
       }
     } catch (e, stackTrace) {
-      print('❌ [DeliveryDetails] Erreur lors du chargement: $e');
-      print('❌ [DeliveryDetails] Stack trace: $stackTrace');
       setState(() {
         _errorMessage = e.toString().replaceAll('Exception: ', '');
         _isLoading = false;
@@ -319,33 +297,18 @@ class _DeliveryDetailsScreenState extends State<DeliveryDetailsScreen> {
 
           const SizedBox(height: AppDimensions.spacingS),
 
-          // Informations du client
+          // Informations du client (essentielles pour la livraison)
           _buildClientInfoCard(colis),
 
           const SizedBox(height: AppDimensions.spacingS),
 
-          // Informations de livraison
+          // Informations de livraison (essentielles)
           _buildDeliveryInfoCard(colis),
 
           const SizedBox(height: AppDimensions.spacingS),
 
-          // Informations du colis (poids, mode, temp)
-          _buildColisInfoCard(colis),
-
-          const SizedBox(height: AppDimensions.spacingS),
-
-          // Informations du marchand et boutique
-          _buildMarchandBoutiqueCard(colis),
-
-          const SizedBox(height: AppDimensions.spacingS),
-
-          // Informations financières
-          _buildFinancialInfoCard(colis),
-
-          const SizedBox(height: AppDimensions.spacingS),
-
-          // Historique de livraison
-          _buildHistoryCard(colis),
+          // Montant à encaisser (important pour le paiement)
+          _buildAmountCard(colis),
 
           // Preuves de livraison (photo et signature) - uniquement si livré
           if (colis.status == 2) ...[
@@ -429,26 +392,13 @@ class _DeliveryDetailsScreenState extends State<DeliveryDetailsScreen> {
                     ),
                     const SizedBox(width: AppDimensions.spacingS),
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            colis.code,
-                            style: GoogleFonts.montserrat(
-                              fontSize: AppDimensions.fontSizeS,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                          const SizedBox(height: AppDimensions.spacingXS),
-                          Text(
-                            'Numéro de facture: ${colis.numeroFacture}',
-                            style: GoogleFonts.montserrat(
-                              fontSize: AppDimensions.fontSizeXS,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
+                      child: Text(
+                        colis.code,
+                        style: GoogleFonts.montserrat(
+                          fontSize: AppDimensions.fontSizeM,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
+                        ),
                       ),
                     ),
                     Container(
@@ -716,27 +666,16 @@ class _DeliveryDetailsScreenState extends State<DeliveryDetailsScreen> {
             child: Column(
               children: [
                 _buildModernInfoRow(
-                  'Numéro de livraison',
-                  colis.livraison.numeroDeLivraison,
-                  Icons.confirmation_number,
+                  'Code de validation',
+                  colis.livraison.codeValidation,
+                  Icons.verified_user,
                 ),
                 _buildModernInfoRow(
                   'Adresse de livraison',
                   colis.livraison.adresseDeLivraison,
                   Icons.location_on,
+                  isLocation: true,
                 ),
-                _buildModernInfoRow(
-                  'Code de validation',
-                  colis.livraison.codeValidation,
-                  Icons.verified_user,
-                ),
-                if (colis.livraison.noteLivraison != null &&
-                    colis.livraison.noteLivraison!.isNotEmpty)
-                  _buildModernInfoRow(
-                    'Note de livraison',
-                    colis.livraison.noteLivraison!,
-                    Icons.note,
-                  ),
                 if (colis.instructionsLivraison != null &&
                     colis.instructionsLivraison!.isNotEmpty)
                   _buildModernInfoRow(
@@ -752,7 +691,7 @@ class _DeliveryDetailsScreenState extends State<DeliveryDetailsScreen> {
     );
   }
 
-  Widget _buildColisInfoCard(ColisDetail colis) {
+  Widget _buildAmountCard(ColisDetail colis) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -809,371 +748,6 @@ class _DeliveryDetailsScreenState extends State<DeliveryDetailsScreen> {
                     ],
                   ),
                   child: const Icon(
-                    Icons.inventory,
-                    color: Colors.white,
-                    size: 18,
-                  ),
-                ),
-                const SizedBox(width: AppDimensions.spacingS),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Informations du colis',
-                        style: GoogleFonts.montserrat(
-                          fontSize: AppDimensions.fontSizeM,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: AppDimensions.spacingXS),
-                      Text(
-                        'Caractéristiques du colis',
-                        style: GoogleFonts.montserrat(
-                          fontSize: AppDimensions.fontSizeXS,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // Contenu
-          Padding(
-            padding: const EdgeInsets.all(AppDimensions.spacingM),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildModernInfoRow(
-                        'Poids',
-                        colis.poids.libelle,
-                        Icons.fitness_center,
-                      ),
-                    ),
-                    const SizedBox(width: AppDimensions.spacingS),
-                    Expanded(
-                      child: _buildModernInfoRow(
-                        'Type de colis',
-                        colis.typeColis.libelle,
-                        Icons.inventory,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppDimensions.spacingS),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildModernInfoRow(
-                        'Mode de livraison',
-                        colis.modeLivraison.libelle,
-                        Icons.local_shipping,
-                      ),
-                    ),
-                    const SizedBox(width: AppDimensions.spacingS),
-                    Expanded(
-                      child: _buildModernInfoRow(
-                        'Délai',
-                        colis.delai.libelle,
-                        Icons.timer,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppDimensions.spacingS),
-                _buildModernInfoRow(
-                  'Conditionnement',
-                  colis.conditionnementColis.libelle,
-                  Icons.inventory_2,
-                ),
-                const SizedBox(height: AppDimensions.spacingS),
-                _buildModernInfoRow(
-                  'Période de livraison',
-                  colis.temp.libelle,
-                  Icons.access_time,
-                ),
-                if (colis.temp.description.isNotEmpty)
-                  _buildModernInfoRow(
-                    'Description',
-                    colis.temp.description,
-                    Icons.info_outline,
-                  ),
-                if (colis.temp.heureDebut.isNotEmpty &&
-                    colis.temp.heureFin.isNotEmpty)
-                  _buildModernInfoRow(
-                    'Horaires',
-                    '${colis.temp.heureDebut} - ${colis.temp.heureFin}',
-                    Icons.schedule,
-                  ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMarchandBoutiqueCard(ColisDetail colis) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.success.withOpacity(0.08),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-            spreadRadius: 0,
-          ),
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // En-tête avec gradient
-          Container(
-            padding: const EdgeInsets.all(AppDimensions.spacingM),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppColors.success.withOpacity(0.1),
-                  AppColors.success.withOpacity(0.05),
-                ],
-              ),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(AppDimensions.radiusL),
-                topRight: Radius.circular(AppDimensions.radiusL),
-              ),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(AppDimensions.spacingS),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        AppColors.success,
-                        AppColors.success.withOpacity(0.8),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusS),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.success.withOpacity(0.3),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: const Icon(Icons.store, color: Colors.white, size: 18),
-                ),
-                const SizedBox(width: AppDimensions.spacingS),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Marchand & Boutique',
-                        style: GoogleFonts.montserrat(
-                          fontSize: AppDimensions.fontSizeM,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: AppDimensions.spacingXS),
-                      Text(
-                        'Informations du vendeur',
-                        style: GoogleFonts.montserrat(
-                          fontSize: AppDimensions.fontSizeXS,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // Contenu
-          Padding(
-            padding: const EdgeInsets.all(AppDimensions.spacingM),
-            child: Column(
-              children: [
-                // Informations du marchand
-                Container(
-                  padding: const EdgeInsets.all(AppDimensions.spacingS),
-                  decoration: BoxDecoration(
-                    color: AppColors.background,
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusS),
-                    border: Border.all(color: Colors.grey.shade200, width: 1),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.person_outline,
-                            color: AppColors.primary,
-                            size: 16,
-                          ),
-                          const SizedBox(width: AppDimensions.spacingS),
-                          Text(
-                            'Marchand',
-                            style: GoogleFonts.montserrat(
-                              fontSize: AppDimensions.fontSizeXS,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: AppDimensions.spacingS),
-                      _buildModernInfoRow(
-                        'Nom',
-                        colis.marchand.fullName,
-                        Icons.person,
-                      ),
-                      _buildModernInfoRow(
-                        'Téléphone',
-                        colis.marchand.mobile,
-                        Icons.phone,
-                        isPhone: true,
-                      ),
-                      _buildModernInfoRow(
-                        'Adresse',
-                        colis.marchand.adresse,
-                        Icons.location_on,
-                        isLocation: true,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: AppDimensions.spacingS),
-                // Informations de la boutique
-                Container(
-                  padding: const EdgeInsets.all(AppDimensions.spacingS),
-                  decoration: BoxDecoration(
-                    color: AppColors.background,
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusS),
-                    border: Border.all(color: Colors.grey.shade200, width: 1),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.store_outlined,
-                            color: AppColors.primary,
-                            size: 16,
-                          ),
-                          const SizedBox(width: AppDimensions.spacingS),
-                          Text(
-                            'Boutique',
-                            style: GoogleFonts.montserrat(
-                              fontSize: AppDimensions.fontSizeXS,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: AppDimensions.spacingS),
-                      _buildModernInfoRow(
-                        'Nom',
-                        colis.boutique.libelle,
-                        Icons.store,
-                      ),
-                      _buildModernInfoRow(
-                        'Téléphone',
-                        colis.boutique.mobile,
-                        Icons.phone,
-                        isPhone: true,
-                      ),
-                      _buildModernInfoRow(
-                        'Adresse',
-                        colis.boutique.adresse,
-                        Icons.location_on,
-                        isLocation: true,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFinancialInfoCard(ColisDetail colis) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.warning.withOpacity(0.08),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-            spreadRadius: 0,
-          ),
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // En-tête avec gradient
-          Container(
-            padding: const EdgeInsets.all(AppDimensions.spacingM),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppColors.warning.withOpacity(0.1),
-                  AppColors.warning.withOpacity(0.05),
-                ],
-              ),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(AppDimensions.radiusL),
-                topRight: Radius.circular(AppDimensions.radiusL),
-              ),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(AppDimensions.spacingS),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        AppColors.warning,
-                        AppColors.warning.withOpacity(0.8),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusS),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.warning.withOpacity(0.3),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: const Icon(
                     Icons.account_balance_wallet,
                     color: Colors.white,
                     size: 18,
@@ -1194,7 +768,7 @@ class _DeliveryDetailsScreenState extends State<DeliveryDetailsScreen> {
                       ),
                       const SizedBox(height: AppDimensions.spacingXS),
                       Text(
-                        'Détails des montants',
+                        'Montants et frais',
                         style: GoogleFonts.montserrat(
                           fontSize: AppDimensions.fontSizeXS,
                           color: AppColors.textSecondary,
@@ -1211,173 +785,19 @@ class _DeliveryDetailsScreenState extends State<DeliveryDetailsScreen> {
             padding: const EdgeInsets.all(AppDimensions.spacingM),
             child: Column(
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildModernAmountCard(
-                        'Montant à encaisser',
-                        colis.montantAEncaisse.toString(),
-                        AppColors.primary,
-                        Icons.money,
-                      ),
-                    ),
-                    const SizedBox(width: AppDimensions.spacingS),
-                    Expanded(
-                      child: _buildModernAmountCard(
-                        'Prix de vente',
-                        colis.prixDeVente.toString(),
-                        AppColors.success,
-                        Icons.sell,
-                      ),
-                    ),
-                  ],
+                _buildModernAmountCard(
+                  'Montant à encaisser',
+                  colis.montantAEncaisse.toString(),
+                  AppColors.primary,
+                  Icons.money,
                 ),
                 const SizedBox(height: AppDimensions.spacingS),
                 _buildModernAmountCard(
-                  'Montant de la livraison',
+                  'Frais de livraison',
                   colis.historiqueLivraison.montantDeLaLivraison.toString(),
-                  AppColors.warning,
+                  AppColors.success,
                   Icons.local_shipping,
                 ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHistoryCard(ColisDetail colis) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.textSecondary.withOpacity(0.08),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-            spreadRadius: 0,
-          ),
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // En-tête avec gradient
-          Container(
-            padding: const EdgeInsets.all(AppDimensions.spacingM),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppColors.textSecondary.withOpacity(0.1),
-                  AppColors.textSecondary.withOpacity(0.05),
-                ],
-              ),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(AppDimensions.radiusL),
-                topRight: Radius.circular(AppDimensions.radiusL),
-              ),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(AppDimensions.spacingS),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        AppColors.textSecondary,
-                        AppColors.textSecondary.withOpacity(0.8),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusS),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.textSecondary.withOpacity(0.3),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.history,
-                    color: Colors.white,
-                    size: 18,
-                  ),
-                ),
-                const SizedBox(width: AppDimensions.spacingS),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Historique de livraison',
-                        style: GoogleFonts.montserrat(
-                          fontSize: AppDimensions.fontSizeM,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: AppDimensions.spacingXS),
-                      Text(
-                        'Suivi des modifications',
-                        style: GoogleFonts.montserrat(
-                          fontSize: AppDimensions.fontSizeXS,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // Contenu
-          Padding(
-            padding: const EdgeInsets.all(AppDimensions.spacingM),
-            child: Column(
-              children: [
-                _buildModernInfoRow(
-                  'Statut historique',
-                  colis.historiqueLivraison.status,
-                  Icons.info,
-                ),
-                _buildModernInfoRow(
-                  'Créé le',
-                  _formatDate(colis.historiqueLivraison.createdAt),
-                  Icons.add_circle,
-                ),
-                _buildModernInfoRow(
-                  'Modifié le',
-                  _formatDate(colis.historiqueLivraison.updatedAt),
-                  Icons.edit,
-                ),
-                if (colis.historiqueLivraison.dateLivraisonEffective != null)
-                  _buildModernInfoRow(
-                    'Date de livraison effective',
-                    _formatDate(
-                      colis.historiqueLivraison.dateLivraisonEffective!,
-                    ),
-                    Icons.check_circle,
-                  ),
-                if (colis.historiqueLivraison.noteLivraison != null &&
-                    colis.historiqueLivraison.noteLivraison!.isNotEmpty)
-                  _buildModernInfoRow(
-                    'Note de livraison',
-                    colis.historiqueLivraison.noteLivraison!,
-                    Icons.note,
-                  ),
-                if (colis.historiqueLivraison.motifAnnulation != null &&
-                    colis.historiqueLivraison.motifAnnulation!.isNotEmpty)
-                  _buildModernInfoRow(
-                    'Motif d\'annulation',
-                    colis.historiqueLivraison.motifAnnulation!,
-                    Icons.cancel,
-                  ),
               ],
             ),
           ),
@@ -1389,21 +809,6 @@ class _DeliveryDetailsScreenState extends State<DeliveryDetailsScreen> {
   Widget _buildProofCard(ColisDetail colis) {
     final historique = colis.historiqueLivraison;
 
-    print(
-      '🔍 [DeliveryDetails] _buildProofCard - photoProofPaths: ${historique.photoProofPaths}',
-    );
-    print(
-      '🔍 [DeliveryDetails] _buildProofCard - photoProofPaths != null: ${historique.photoProofPaths != null}',
-    );
-    if (historique.photoProofPaths != null) {
-      print(
-        '🔍 [DeliveryDetails] _buildProofCard - photoProofPaths.length: ${historique.photoProofPaths!.length}',
-      );
-      print(
-        '🔍 [DeliveryDetails] _buildProofCard - photoProofPaths.isNotEmpty: ${historique.photoProofPaths!.isNotEmpty}',
-      );
-    }
-
     final hasPhoto =
         historique.photoProofPaths != null &&
         historique.photoProofPaths!.isNotEmpty;
@@ -1411,15 +816,8 @@ class _DeliveryDetailsScreenState extends State<DeliveryDetailsScreen> {
         historique.signatureData != null &&
         historique.signatureData!.isNotEmpty;
 
-    print(
-      '🔍 [DeliveryDetails] _buildProofCard - hasPhoto: $hasPhoto, hasSignature: $hasSignature',
-    );
-
     // Si aucune preuve n'est disponible, ne pas afficher la carte
     if (!hasPhoto && !hasSignature) {
-      print(
-        '⚠️ [DeliveryDetails] _buildProofCard - Aucune preuve disponible, carte masquée',
-      );
       return const SizedBox.shrink();
     }
 
@@ -1563,7 +961,7 @@ class _DeliveryDetailsScreenState extends State<DeliveryDetailsScreen> {
     final photoUrl =
         photoPath.startsWith('http')
             ? photoPath
-            : 'http://192.168.1.8:8000/storage/$photoPath';
+            : '${ApiConstants.storageBaseUrl}/$photoPath';
 
     return GestureDetector(
       onTap: () => _showPhotoFullScreen(photoUrl),
@@ -1632,7 +1030,7 @@ class _DeliveryDetailsScreenState extends State<DeliveryDetailsScreen> {
         final photoUrl =
             photoPath.startsWith('http')
                 ? photoPath
-                : 'http://192.168.1.8:8000/storage/$photoPath';
+                : '${ApiConstants.storageBaseUrl}/$photoPath';
 
         return GestureDetector(
           onTap: () => _showPhotoFullScreen(photoUrl),
@@ -2043,15 +1441,6 @@ class _DeliveryDetailsScreenState extends State<DeliveryDetailsScreen> {
         return AppColors.error; // Annulé
       default:
         return AppColors.textSecondary;
-    }
-  }
-
-  String _formatDate(String dateString) {
-    try {
-      final date = DateTime.parse(dateString);
-      return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year} à ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
-    } catch (e) {
-      return dateString;
     }
   }
 

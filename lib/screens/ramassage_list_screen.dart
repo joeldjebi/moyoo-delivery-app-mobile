@@ -51,7 +51,6 @@ class _RamassageListScreenState extends State<RamassageListScreen> {
 
     // Charger les ramassages une seule fois
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      print('🔍 PostFrameCallback exécuté');
       _loadRamassagesIfNeeded();
       _checkNotificationRefreshFlags();
     });
@@ -64,18 +63,10 @@ class _RamassageListScreenState extends State<RamassageListScreen> {
   }
 
   Future<void> _loadRamassagesIfNeeded() async {
-    print('🔍 _loadRamassagesIfNeeded appelé');
-    print('🔍 Ramassages vides: ${_ramassageController.ramassages.isEmpty}');
-    print('🔍 En cours de chargement: ${_ramassageController.isLoading}');
-    print('🔍 Utilisateur connecté: ${_ramassageController.isUserLoggedIn}');
-
     // Forcer le chargement des ramassages
     if (_ramassageController.ramassages.isEmpty &&
         !_ramassageController.isLoading) {
-      print('🔍 Démarrage du chargement des ramassages...');
       await _ramassageController.forceLoadRamassages();
-    } else {
-      print('🔍 Conditions non remplies pour le chargement');
     }
 
     // Filtrer et paginer les ramassages
@@ -85,13 +76,8 @@ class _RamassageListScreenState extends State<RamassageListScreen> {
   /// Vérifier les flags d'actualisation des notifications
   void _checkNotificationRefreshFlags() {
     try {
-      print(
-        '🔄 Vérification des flags d\'actualisation des notifications (RamassageListScreen)',
-      );
       NotificationService.checkAndProcessRefreshFlags();
-    } catch (e) {
-      print('❌ Erreur lors de la vérification des flags: $e');
-    }
+    } catch (e) {}
   }
 
   /// Envoyer une notification locale pour les actions de ramassage
@@ -126,11 +112,7 @@ class _RamassageListScreenState extends State<RamassageListScreen> {
             payload: 'ramassage_action_info',
           );
       }
-
-      print('✅ Notification locale envoyée: $title');
-    } catch (e) {
-      print('❌ Erreur lors de l\'envoi de la notification locale: $e');
-    }
+    } catch (e) {}
   }
 
   /// Réinitialiser la pagination
@@ -376,33 +358,19 @@ class _RamassageListScreenState extends State<RamassageListScreen> {
   Widget _buildRamassageList() {
     return GetBuilder<RamassageController>(
       builder: (controller) {
-        print(
-          '🔍 _buildRamassageList rebuild - ramassages: ${controller.ramassages.length}, loading: ${controller.isLoading}, error: ${controller.errorMessage}',
-        );
-
         if (controller.isLoading) {
-          print('🔍 Affichage du shimmer de chargement');
           return _buildShimmerLoading();
         }
 
         if (controller.errorMessage.isNotEmpty) {
-          print(
-            '🔍 Affichage de l\'état d\'erreur: ${controller.errorMessage}',
-          );
           return _buildErrorState(controller);
         }
 
         // Utiliser les ramassages paginés au lieu des filtrés
-        print('🔍 Ramassages paginés: ${_paginatedRamassages.length}');
-
         if (_paginatedRamassages.isEmpty && !controller.isLoading) {
-          print('🔍 Affichage de l\'état vide');
           return _buildEmptyState();
         }
 
-        print(
-          '🔍 Affichage de la liste avec ${_paginatedRamassages.length} ramassages',
-        );
         return RefreshIndicator(
           onRefresh: () async {
             await controller.forceLoadRamassages();
@@ -715,7 +683,6 @@ class _RamassageListScreenState extends State<RamassageListScreen> {
             const SizedBox(height: AppDimensions.spacingM),
             ElevatedButton(
               onPressed: () async {
-                print('🔍 Bouton de chargement manuel cliqué');
                 await _ramassageController.forceLoadRamassages();
                 _filterRamassages(loadInitialItems: true);
               },

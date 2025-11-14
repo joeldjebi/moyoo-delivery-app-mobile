@@ -59,9 +59,6 @@ class _AdvancedFilterWidgetState extends State<AdvancedFilterWidget> {
   @override
   void initState() {
     super.initState();
-    print(
-      '🔍 [AdvancedFilter] initState() - _showStatisticsAfterFilter: $_showStatisticsAfterFilter',
-    );
     _extractDeliveryTypes();
   }
 
@@ -212,7 +209,6 @@ class _AdvancedFilterWidgetState extends State<AdvancedFilterWidget> {
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () {
-                      print('🔍 [AdvancedFilter] Bouton "Appliquer" cliqué');
                       _applyFilters();
                     },
                     style: ElevatedButton.styleFrom(
@@ -496,15 +492,9 @@ class _AdvancedFilterWidgetState extends State<AdvancedFilterWidget> {
           Switch(
             value: _showStatisticsAfterFilter,
             onChanged: (value) {
-              print(
-                '🔍 [AdvancedFilter] Switch changé: $_showStatisticsAfterFilter -> $value',
-              );
               setState(() {
                 _showStatisticsAfterFilter = value;
               });
-              print(
-                '🔍 [AdvancedFilter] Nouvelle valeur du switch: $_showStatisticsAfterFilter',
-              );
             },
             activeColor: AppColors.primary,
             activeTrackColor: AppColors.primary.withOpacity(0.3),
@@ -527,28 +517,12 @@ class _AdvancedFilterWidgetState extends State<AdvancedFilterWidget> {
   }
 
   void _applyFilters() {
-    print('🔍 [AdvancedFilter] _applyFilters() appelée');
     final filteredColis = _filterColis();
-    print(
-      '🔍 [AdvancedFilter] Nombre de colis filtrés: ${filteredColis.length}',
-    );
-    print('🔍 [AdvancedFilter] Type: $_selectedDeliveryType');
-    print('🔍 [AdvancedFilter] Statut: $_selectedStatus');
-    print('🔍 [AdvancedFilter] Période: $_selectedPeriod');
-    print('🔍 [AdvancedFilter] Date début: $_startDate');
-    print('🔍 [AdvancedFilter] Date fin: $_endDate');
-    print(
-      '🔍 [AdvancedFilter] Afficher statistiques: $_showStatisticsAfterFilter',
-    );
 
     // Fermer le modal AVANT d'appeler le callback
-    print('🔍 [AdvancedFilter] Fermeture du modal');
     Navigator.of(context).pop();
 
     // Appeler le callback après la fermeture du modal
-    print(
-      '🔍 [AdvancedFilter] onFilterApplied appelé après fermeture du modal',
-    );
     widget.onFilterApplied(
       filteredColis,
       _selectedDeliveryType,

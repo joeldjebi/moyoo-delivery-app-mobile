@@ -18,8 +18,6 @@ class ChangePasswordService {
     required String newPasswordConfirmation,
   }) async {
     try {
-      print('🔐 Changement de mot de passe...');
-
       // Vérifier l'authentification
       final authController = Get.find<AuthController>();
       final token = authController.authToken;
@@ -36,9 +34,6 @@ class ChangePasswordService {
         newPassword: newPassword,
         newPasswordConfirmation: newPasswordConfirmation,
       );
-
-      print('🔐 Envoi de la requête de changement de mot de passe...');
-      print('🔐 URL: ${ApiConstants.baseUrl}/api/livreur/change-password');
 
       final response = await http
           .post(
@@ -58,26 +53,14 @@ class ChangePasswordService {
             },
           );
 
-      print('🔐 Réponse reçue: ${response.statusCode}');
-      print('🔐 Corps de la réponse: ${response.body}');
-
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
         final changePasswordResponse = ChangePasswordResponse.fromJson(
           responseData,
         );
 
-        if (changePasswordResponse.success) {
-          print('✅ Mot de passe changé avec succès');
-        } else {
-          print(
-            '❌ Échec du changement de mot de passe: ${changePasswordResponse.message}',
-          );
-        }
-
         return changePasswordResponse;
       } else if (response.statusCode == 401) {
-        print('❌ Token d\'authentification invalide');
         return ChangePasswordResponse(
           success: false,
           message: 'Session expirée. Veuillez vous reconnecter.',
@@ -96,17 +79,14 @@ class ChangePasswordService {
           errorMessage = errors['new_password_confirmation'][0];
         }
 
-        print('❌ Erreur de validation: $errorMessage');
         return ChangePasswordResponse(success: false, message: errorMessage);
       } else {
-        print('❌ Erreur serveur: ${response.statusCode}');
         return ChangePasswordResponse(
           success: false,
           message: 'Erreur serveur. Veuillez réessayer.',
         );
       }
     } catch (e) {
-      print('❌ Erreur lors du changement de mot de passe: $e');
       return ChangePasswordResponse(
         success: false,
         message: 'Erreur de connexion. Vérifiez votre connexion internet.',

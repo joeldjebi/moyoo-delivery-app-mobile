@@ -1,7 +1,8 @@
 // Constantes pour l'API
 class ApiConstants {
   // URL de base de l'API
-  static const String baseUrl = 'http://192.168.1.2:8000';
+  static const String baseUrl =
+      'https://blastodermatic-stefan-raggedly.ngrok-free.dev';
 
   // Endpoints d'authentification
   static const String loginEndpoint = '/api/livreur/login';
@@ -36,7 +37,12 @@ class ApiConstants {
       '/api/livreur/location/mission-history';
 
   // Socket.IO Configuration
-  static const String socketUrl = 'http://192.168.1.2:3000';
+  static const String socketUrl =
+      'https://blastodermatic-stefan-raggedly.ngrok-free.dev';
+
+  // URL de base pour les images et fichiers stockés
+  static const String storageBaseUrl =
+      'https://blastodermatic-stefan-raggedly.ngrok-free.dev/storage';
 
   // Timeouts
   static const Duration connectTimeout = Duration(seconds: 30);

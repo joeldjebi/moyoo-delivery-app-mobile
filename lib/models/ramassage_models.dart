@@ -189,15 +189,15 @@ class Marchand {
 
   factory Marchand.fromJson(Map<String, dynamic> json) {
     return Marchand(
-      id: json['id'] ?? 0,
-      entrepriseId: json['entreprise_id'] ?? 0,
+      id: int.tryParse(json['id']?.toString() ?? '0') ?? 0,
+      entrepriseId: int.tryParse(json['entreprise_id']?.toString() ?? '0') ?? 0,
       firstName: json['first_name'] ?? '',
       lastName: json['last_name'] ?? '',
       mobile: json['mobile'] ?? '',
       email: json['email'] ?? '',
       adresse: json['adresse'] ?? '',
       status: json['status'] ?? '',
-      communeId: json['commune_id'] ?? 0,
+      communeId: int.tryParse(json['commune_id']?.toString() ?? '0') ?? 0,
       createdBy: json['created_by'] ?? '',
       deletedAt: json['deleted_at'],
       createdAt: json['created_at'] ?? '',
@@ -241,14 +241,14 @@ class Boutique {
 
   factory Boutique.fromJson(Map<String, dynamic> json) {
     return Boutique(
-      id: json['id'] ?? 0,
-      entrepriseId: json['entreprise_id'] ?? 0,
+      id: int.tryParse(json['id']?.toString() ?? '0') ?? 0,
+      entrepriseId: int.tryParse(json['entreprise_id']?.toString() ?? '0') ?? 0,
       libelle: json['libelle'] ?? '',
       mobile: json['mobile'] ?? '',
       adresse: json['adresse'] ?? '',
       adresseGps: json['adresse_gps'] ?? '',
       coverImage: json['cover_image'] ?? '',
-      marchandId: json['marchand_id'] ?? 0,
+      marchandId: int.tryParse(json['marchand_id']?.toString() ?? '0') ?? 0,
       status: json['status'] ?? '',
       createdBy: json['created_by'] ?? '',
       deletedAt: json['deleted_at'],

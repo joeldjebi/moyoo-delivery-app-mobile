@@ -46,7 +46,6 @@ class LocationController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    print('📍 LocationController initialisé');
     _initLocationServiceListeners();
     _initSocketServiceListeners();
   }
@@ -79,10 +78,7 @@ class LocationController extends GetxController {
       ever(_locationService.locationErrorRx, (error) {
         _locationError.value = error;
       });
-
-      print('✅ LocationService initialisé dans LocationController');
     } catch (e) {
-      print('❌ Erreur lors de l\'initialisation du LocationService: $e');
       _locationError.value = 'Erreur d\'initialisation: $e';
     }
   }
@@ -226,19 +222,15 @@ class LocationController extends GetxController {
   /// Démarrer le suivi de localisation
   Future<void> startLocationTracking() async {
     try {
-      print('📍 LocationController - Démarrage du suivi de localisation');
-
       // Démarrer le service de localisation
       final success = await _locationService.startLocationTracking();
       if (!success) {
         _locationError.value = 'Impossible de démarrer le suivi GPS';
-        print('❌ LocationController - Échec du démarrage du service');
         return;
       }
 
       // Mettre à jour manuellement l'état de suivi
       _isLocationTracking.value = true;
-      print('✅ LocationController - Suivi de localisation activé');
 
       // Se connecter au Socket.IO
       await _socketService.connect();
@@ -249,7 +241,6 @@ class LocationController extends GetxController {
       // Démarrer le timer d'envoi périodique
       _startLocationUpdateTimer();
     } catch (e) {
-      print('❌ LocationController - Erreur démarrage suivi: $e');
       _locationError.value = 'Erreur démarrage suivi: $e';
     }
   }
@@ -257,15 +248,12 @@ class LocationController extends GetxController {
   /// Arrêter le suivi de localisation
   Future<void> stopLocationTracking() async {
     try {
-      print('📍 LocationController - Arrêt du suivi de localisation');
-
       // Arrêter le timer
       _locationUpdateTimer?.cancel();
       _locationUpdateTimer = null;
 
       // Mettre à jour manuellement l'état de suivi
       _isLocationTracking.value = false;
-      print('✅ LocationController - Suivi de localisation arrêté');
 
       // Arrêter le service de localisation
       _locationService.stopLocationTracking();
@@ -273,7 +261,6 @@ class LocationController extends GetxController {
       // Mettre à jour le statut
       await _updateLocationStatus('inactive');
     } catch (e) {
-      print('❌ LocationController - Erreur arrêt suivi: $e');
       _locationError.value = 'Erreur arrêt suivi: $e';
     }
   }

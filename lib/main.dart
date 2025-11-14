@@ -42,58 +42,32 @@ void main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-    print('✅ Firebase initialisé avec succès');
-  } catch (e) {
-    print('❌ Erreur lors de l\'initialisation de Firebase: $e');
-  }
+  } catch (e) {}
 
   // Initialiser le service de notifications locales
   try {
     await LocalNotificationService().initialize();
-    print('✅ LocalNotificationService initialisé avec succès');
-  } catch (e) {
-    print('❌ Erreur lors de l\'initialisation de LocalNotificationService: $e');
-  }
-
-  // Initialiser le service de notifications Firebase
-  try {
-    // await NotificationService.initialize();
-    print('✅ NotificationService initialisé avec succès');
-  } catch (e) {
-    print('❌ Erreur lors de l\'initialisation de NotificationService: $e');
-  }
+  } catch (e) {}
 
   // Initialiser le service de localisation
   try {
     Get.put(LocationService());
-    print('✅ LocationService initialisé avec succès');
-  } catch (e) {
-    print('❌ Erreur lors de l\'initialisation de LocationService: $e');
-  }
+  } catch (e) {}
 
   // Initialiser le service de configuration
   try {
     Get.put(ConfigService());
-    print('✅ ConfigService initialisé avec succès');
-  } catch (e) {
-    print('❌ Erreur lors de l\'initialisation de ConfigService: $e');
-  }
+  } catch (e) {}
 
   // Initialiser le service de diagnostic
   try {
     Get.put(DiagnosticService());
-    print('✅ DiagnosticService initialisé avec succès');
-  } catch (e) {
-    print('❌ Erreur lors de l\'initialisation de DiagnosticService: $e');
-  }
+  } catch (e) {}
 
   // Initialiser le service Socket.IO
   try {
     Get.put(SocketService());
-    print('✅ SocketService initialisé avec succès');
-  } catch (e) {
-    print('❌ Erreur lors de l\'initialisation de SocketService: $e');
-  }
+  } catch (e) {}
 
   // Initialiser les contrôleurs GetX
   Get.put(AuthController());

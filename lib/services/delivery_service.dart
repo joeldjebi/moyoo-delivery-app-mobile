@@ -201,14 +201,9 @@ class DeliveryService {
     required String token,
   }) async {
     try {
-      print(
-        '🔍 [DeliveryService] getColisDetails() - Début, colisId: $colisId',
-      );
       final uri = Uri.parse(
         '${ApiConstants.baseUrl}/api/livreur/colis/$colisId/details',
       );
-
-      print('🔍 [DeliveryService] URL: $uri');
 
       final headers = {
         'accept': 'application/json',
@@ -220,7 +215,6 @@ class DeliveryService {
       final request = http.Request('GET', uri);
       request.headers.addAll(headers);
 
-      print('🔍 [DeliveryService] Envoi de la requête...');
       final streamedResponse = await request.send().timeout(
         ApiConstants.connectTimeout,
         onTimeout:
@@ -231,33 +225,18 @@ class DeliveryService {
       );
 
       final response = await http.Response.fromStream(streamedResponse);
-      print('🔍 [DeliveryService] Réponse reçue:');
-      print('   - statusCode: ${response.statusCode}');
-      print('   - body length: ${response.body.length}');
 
       if (response.statusCode == 200) {
         try {
-          print('🔍 [DeliveryService] Parsing de la réponse JSON...');
           final responseData = jsonDecode(response.body);
-          print('🔍 [DeliveryService] JSON parsé avec succès');
-          print(
-            '🔍 [DeliveryService] Données: success=${responseData['success']}, message=${responseData['message']}',
-          );
           final result = DeliveryDetailResponse.fromJson(responseData);
-          print('🔍 [DeliveryService] DeliveryDetailResponse créé avec succès');
           return result;
         } catch (e, stackTrace) {
-          print('❌ [DeliveryService] Erreur lors du parsing: $e');
-          print('❌ [DeliveryService] Stack trace: $stackTrace');
-          print('❌ [DeliveryService] Body: ${response.body}');
           throw Exception('Erreur lors du parsing de la réponse: $e');
         }
       } else if (response.statusCode == 401) {
-        print('❌ [DeliveryService] Token expiré (401)');
         throw Exception('Token expiré');
       } else {
-        print('❌ [DeliveryService] Erreur HTTP: ${response.statusCode}');
-        print('❌ [DeliveryService] Body: ${response.body}');
         throw Exception(
           'Erreur de connexion. Vérifiez votre connexion internet.',
         );

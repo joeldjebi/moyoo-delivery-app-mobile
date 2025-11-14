@@ -1,6 +1,17 @@
 import 'dart:convert';
 import 'ramassage_models.dart';
 
+// Fonction utilitaire pour parser les montants (peuvent être des strings avec décimales)
+int _parseAmount(dynamic value) {
+  if (value == null) return 0;
+  if (value is int) return value;
+  if (value is double) return value.toInt();
+  final str = value.toString();
+  // Gérer les strings avec décimales comme "0.00"
+  final doubleValue = double.tryParse(str);
+  return doubleValue?.toInt() ?? 0;
+}
+
 class RamassageDetailResponse {
   final bool success;
   final String message;
@@ -91,6 +102,7 @@ class RamassageDetail {
   factory RamassageDetail.fromJson(Map<String, dynamic> json) {
     // Parser les colis depuis colis_data si colis_lies est vide
     List<ColisLie> colisLies = [];
+    String colisDataString = '';
 
     // D'abord essayer colis_lies
     final colisLiesList = json['colis_lies'] as List?;
@@ -98,53 +110,71 @@ class RamassageDetail {
       colisLies = colisLiesList.map((e) => ColisLie.fromJson(e)).toList();
     } else {
       // Sinon parser colis_data
-      final colisDataString = json['colis_data'] ?? '';
-      print('🔍 colis_data string: $colisDataString');
-      if (colisDataString.isNotEmpty) {
+      final colisDataValue = json['colis_data'];
+      List<dynamic> colisDataList = [];
+
+      // Gérer le cas où colis_data est une liste ou une string
+      if (colisDataValue is List) {
+        // colis_data est déjà une liste
+        colisDataList = colisDataValue;
+        colisDataString = jsonEncode(colisDataValue);
+      } else if (colisDataValue is String && colisDataValue.isNotEmpty) {
+        // colis_data est une string JSON
+        colisDataString = colisDataValue;
         try {
-          final List<dynamic> colisDataList = jsonDecode(colisDataString);
-          print('🔍 Parsed ${colisDataList.length} colis from colis_data');
+          colisDataList = jsonDecode(colisDataString);
+        } catch (e) {
+          colisDataList = [];
+        }
+      }
+
+      if (colisDataList.isNotEmpty) {
+        try {
           colisLies =
               colisDataList.asMap().entries.map((entry) {
                 final colisData = ColisData.fromJson(entry.value);
                 final colisLie = colisData.toColisLie(entry.key);
                 return colisLie;
               }).toList();
-          print('🔍 Created ${colisLies.length} ColisLie objects');
         } catch (e) {
-          print('❌ Error parsing colis_data: $e');
           colisLies = [];
         }
-      } else {
-        print('🔍 colis_data is empty');
-      }
+      } else {}
     }
 
     return RamassageDetail(
-      id: json['id'] ?? 0,
+      id: int.tryParse(json['id']?.toString() ?? '0') ?? 0,
       codeRamassage: json['code_ramassage'] ?? '',
-      entrepriseId: json['entreprise_id'] ?? 0,
-      marchandId: json['marchand_id'] ?? 0,
-      boutiqueId: json['boutique_id'] ?? 0,
+      entrepriseId: int.tryParse(json['entreprise_id']?.toString() ?? '0') ?? 0,
+      marchandId: int.tryParse(json['marchand_id']?.toString() ?? '0') ?? 0,
+      boutiqueId: int.tryParse(json['boutique_id']?.toString() ?? '0') ?? 0,
       dateDemande: json['date_demande'] ?? '',
       datePlanifiee: json['date_planifiee'] ?? '',
       dateEffectuee: json['date_effectuee'],
       statut: json['statut'] ?? '',
       adresseRamassage: json['adresse_ramassage'] ?? '',
       contactRamassage: json['contact_ramassage'] ?? '',
-      nombreColisEstime: json['nombre_colis_estime'] ?? 0,
-      nombreColisReel: json['nombre_colis_reel'] ?? 0,
-      differenceColis: json['difference_colis'],
+      nombreColisEstime:
+          int.tryParse(json['nombre_colis_estime']?.toString() ?? '0') ?? 0,
+      nombreColisReel:
+          int.tryParse(json['nombre_colis_reel']?.toString() ?? '0') ?? 0,
+      differenceColis:
+          json['difference_colis'] != null
+              ? int.tryParse(json['difference_colis']?.toString() ?? '0')
+              : null,
       typeDifference: json['type_difference'],
       raisonDifference: json['raison_difference'],
-      livreurId: json['livreur_id'],
+      livreurId:
+          json['livreur_id'] != null
+              ? int.tryParse(json['livreur_id']?.toString() ?? '0')
+              : null,
       dateDebutRamassage: json['date_debut_ramassage'],
       dateFinRamassage: json['date_fin_ramassage'],
       photoRamassage: json['photo_ramassage'],
       notesLivreur: json['notes_livreur'],
       notesRamassage: json['notes_ramassage'],
       notes: json['notes'],
-      colisData: json['colis_data'] ?? '',
+      colisData: colisDataString,
       montantTotal: json['montant_total'] ?? '0',
       createdAt: json['created_at'] ?? '',
       updatedAt: json['updated_at'] ?? '',
@@ -219,29 +249,34 @@ class ColisLie {
 
   factory ColisLie.fromJson(Map<String, dynamic> json) {
     return ColisLie(
-      id: json['id'] ?? 0,
-      entrepriseId: json['entreprise_id'] ?? 0,
-      packageColisId: json['package_colis_id'] ?? 0,
+      id: int.tryParse(json['id']?.toString() ?? '0') ?? 0,
+      entrepriseId: int.tryParse(json['entreprise_id']?.toString() ?? '0') ?? 0,
+      packageColisId:
+          int.tryParse(json['package_colis_id']?.toString() ?? '0') ?? 0,
       uuid: json['uuid'] ?? '',
       code: json['code'] ?? '',
-      status: json['status'] ?? 0,
+      status: int.tryParse(json['status']?.toString() ?? '0') ?? 0,
       nomClient: json['nom_client'] ?? '',
       telephoneClient: json['telephone_client'] ?? '',
       adresseClient: json['adresse_client'] ?? '',
-      montantAEncaisse: json['montant_a_encaisse'] ?? 0,
-      prixDeVente: json['prix_de_vente'] ?? 0,
+      montantAEncaisse: _parseAmount(json['montant_a_encaisse']),
+      prixDeVente: _parseAmount(json['prix_de_vente']),
       numeroFacture: json['numero_facture'] ?? '',
       noteClient: json['note_client'],
       instructionsLivraison: json['instructions_livraison'],
-      zoneId: json['zone_id'] ?? 0,
-      communeId: json['commune_id'] ?? 0,
-      ordreLivraison: json['ordre_livraison'],
+      zoneId: int.tryParse(json['zone_id']?.toString() ?? '0') ?? 0,
+      communeId: int.tryParse(json['commune_id']?.toString() ?? '0') ?? 0,
+      ordreLivraison:
+          json['ordre_livraison'] != null
+              ? int.tryParse(json['ordre_livraison']?.toString() ?? '0')
+              : null,
       dateLivraisonPrevue: json['date_livraison_prevue'],
-      livreurId: json['livreur_id'] ?? 0,
-      enginId: json['engin_id'] ?? 0,
-      poidsId: json['poids_id'] ?? 0,
-      modeLivraisonId: json['mode_livraison_id'] ?? 0,
-      tempId: json['temp_id'] ?? 0,
+      livreurId: int.tryParse(json['livreur_id']?.toString() ?? '0') ?? 0,
+      enginId: int.tryParse(json['engin_id']?.toString() ?? '0') ?? 0,
+      poidsId: int.tryParse(json['poids_id']?.toString() ?? '0') ?? 0,
+      modeLivraisonId:
+          int.tryParse(json['mode_livraison_id']?.toString() ?? '0') ?? 0,
+      tempId: int.tryParse(json['temp_id']?.toString() ?? '0') ?? 0,
       createdBy: json['created_by'] ?? '',
       deletedAt: json['deleted_at'],
       createdAt: json['created_at'] ?? '',
@@ -281,8 +316,8 @@ class Pivot {
 
   factory Pivot.fromJson(Map<String, dynamic> json) {
     return Pivot(
-      ramassageId: json['ramassage_id'] ?? 0,
-      colisId: json['colis_id'] ?? 0,
+      ramassageId: int.tryParse(json['ramassage_id']?.toString() ?? '0') ?? 0,
+      colisId: int.tryParse(json['colis_id']?.toString() ?? '0') ?? 0,
       createdAt: json['created_at'] ?? '',
       updatedAt: json['updated_at'] ?? '',
     );
@@ -330,19 +365,23 @@ class ColisData {
   });
 
   factory ColisData.fromJson(Map<String, dynamic> json) {
-    print(
-      '🔍 Parsing ColisData: code="${json['code']}", nom_client="${json['nom_client']}"',
-    );
+    // Gérer les deux formats possibles : "client" ou "nom_client"
+    final nomClient = json['client'] ?? json['nom_client'] ?? '';
+    // Gérer "valeur" ou "montant_a_encaisse"
+    final montantAEncaisseStr =
+        json['valeur']?.toString() ??
+        json['montant_a_encaisse']?.toString() ??
+        '0';
+
     return ColisData(
       id: json['id']?.toString(),
       code: json['code'] ?? '',
-      nomClient: json['nom_client'] ?? '',
+      nomClient: nomClient,
       telephoneClient: json['telephone_client'] ?? '',
       adresseClient: json['adresse_client'] ?? '',
-      montantAEncaisse:
-          int.tryParse(json['montant_a_encaisse']?.toString() ?? '0') ?? 0,
+      montantAEncaisse: int.tryParse(montantAEncaisseStr) ?? 0,
       prixDeVente: int.tryParse(json['prix_de_vente']?.toString() ?? '0') ?? 0,
-      noteClient: json['note_client'],
+      noteClient: json['notes'] ?? json['note_client'],
       instructionsLivraison: json['instructions_livraison'],
       communeId: int.tryParse(json['commune_id']?.toString() ?? '0') ?? 0,
       livreurId: int.tryParse(json['livreur_id']?.toString() ?? '0') ?? 0,
@@ -358,7 +397,6 @@ class ColisData {
 
   // Convertir en ColisLie pour l'affichage
   ColisLie toColisLie(int index) {
-    print('🔍 Converting ColisData: code="$code", nomClient="$nomClient"');
     return ColisLie(
       id: int.tryParse(id ?? '${index + 1}') ?? (index + 1),
       entrepriseId: 1,

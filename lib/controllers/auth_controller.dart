@@ -40,19 +40,10 @@ class AuthController extends GetxController {
           _currentLivreur.value = livreur;
           _isLoggedIn.value = true;
 
-          print('🔄 Vérification du profil stocké: ${livreur.nomComplet}');
-
           // Vérifier si le profil stocké est complet (a des communes)
           // Si pas complet, récupérer le profil détaillé
           if (livreur.communes == null || livreur.communes!.isEmpty) {
-            print(
-              '⚠️ Profil incomplet, récupération des données détaillées...',
-            );
             await fetchProfile();
-          } else {
-            print(
-              '✅ Profil complet déjà stocké: ${livreur.communes!.length} communes',
-            );
           }
         } else {
           await _logout();
@@ -75,8 +66,6 @@ class AuthController extends GetxController {
       );
 
       if (response.success) {
-        print('🔐 Connexion réussie, récupération du profil détaillé...');
-
         // Récupérer le profil détaillé immédiatement après la connexion
         final detailedProfile = await AuthService.getProfile(
           response.data.token,
@@ -84,10 +73,6 @@ class AuthController extends GetxController {
 
         // Utiliser le profil détaillé s'il est disponible, sinon utiliser les données de base
         final profileToSave = detailedProfile ?? response.data.livreur;
-
-        print(
-          '📊 Profil récupéré: ${profileToSave.nomComplet} - ${profileToSave.communes?.length ?? 0} communes',
-        );
 
         // Créer un AuthData avec le profil complet
         final completeAuthData = AuthData(
@@ -101,7 +86,6 @@ class AuthController extends GetxController {
 
         // Sauvegarder les données complètes d'authentification
         await AuthStorage.saveAuthData(completeAuthData);
-        print('💾 Données d\'authentification sauvegardées localement');
 
         // Mettre à jour l'état avec le profil complet
         _authToken.value = response.data.token;
@@ -123,22 +107,12 @@ class AuthController extends GetxController {
             response.message.isNotEmpty
                 ? response.message
                 : 'Échec de la connexion. Veuillez vérifier vos identifiants.';
-        print('❌ Échec de la connexion: ${response.message}');
         return false;
       }
     } on ApiError catch (e) {
       _errorMessage.value = e.message;
-      print('❌ Erreur API lors de la connexion:');
-      print('   Message: ${e.message}');
-      print('   Status Code: ${e.statusCode}');
-      print('   Error: ${e.error}');
-      print('   Full Error: $e');
       return false;
     } catch (e) {
-      print('❌ Erreur inattendue lors de la connexion: $e');
-      print('❌ Type d\'erreur: ${e.runtimeType}');
-      print('❌ Est-ce une ApiError? ${e is ApiError}');
-
       // Vérifier si c'est une ApiError wrappée
       if (e.toString().contains('ApiError')) {
         // Extraire le message de l'ApiError
@@ -148,7 +122,6 @@ class AuthController extends GetxController {
         ).firstMatch(errorString);
         if (messageMatch != null) {
           _errorMessage.value = messageMatch.group(1) ?? 'Erreur de connexion';
-          print('✅ Message d\'erreur extrait: ${messageMatch.group(1)}');
         } else {
           _errorMessage.value = 'Erreur de connexion';
         }
@@ -177,15 +150,7 @@ class AuthController extends GetxController {
           final fcmResponse = await FcmService.deleteFcmToken(
             authToken: _authToken.value,
           );
-          if (fcmResponse.success) {
-            print('✅ Token FCM supprimé du serveur lors de la déconnexion');
-          } else {
-            print(
-              '⚠️ Erreur lors de la suppression du token FCM: ${fcmResponse.message}',
-            );
-          }
         } catch (e) {
-          print('⚠️ Impossible de supprimer le token FCM: $e');
           // Ne pas faire échouer la déconnexion si la suppression du token FCM échoue
         }
       }
@@ -194,9 +159,7 @@ class AuthController extends GetxController {
       try {
         final notificationManager = Get.find<NotificationManagerService>();
         await notificationManager.deleteAllNotifications();
-        print('✅ Notifications locales supprimées lors de la déconnexion');
       } catch (e) {
-        print('⚠️ Impossible de supprimer les notifications: $e');
         // Ne pas faire échouer la déconnexion si la suppression des notifications échoue
       }
 
@@ -225,11 +188,7 @@ class AuthController extends GetxController {
     try {
       final notificationManager = Get.find<NotificationManagerService>();
       await notificationManager.deleteAllNotifications();
-      print('✅ Notifications locales supprimées lors de la déconnexion locale');
     } catch (e) {
-      print(
-        '⚠️ Impossible de supprimer les notifications lors de la déconnexion locale: $e',
-      );
       // Ne pas faire échouer la déconnexion si la suppression des notifications échoue
     }
 
@@ -331,7 +290,6 @@ class AuthController extends GetxController {
         await AuthStorage.updateLivreur(profile);
       }
     } catch (e) {
-      print('Erreur lors de la récupération du profil: $e');
     } finally {
       _isLoading.value = false;
     }

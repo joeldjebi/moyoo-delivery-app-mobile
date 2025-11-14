@@ -28,22 +28,17 @@ class DeliveryController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    print('🔍 DeliveryController initialisé');
   }
 
   /// Charger les colis assignés
   Future<void> loadColis() async {
     if (_isLoading.value) {
-      print('🔍 loadColis() - Déjà en cours de chargement, abandon');
       return;
     }
 
     try {
-      print('🔍 loadColis() - Début du chargement');
       _isLoading.value = true;
       _errorMessage.value = '';
-
-      print('🔍 Chargement des colis assignés...');
 
       final authController = Get.find<AuthController>();
       final token = authController.authToken;
@@ -57,30 +52,21 @@ class DeliveryController extends GetxController {
       if (response.success) {
         _colis.value = response.data;
         _statistiques.value = response.statistiques;
-
-        print('🔍 Colis chargés: ${_colis.length}');
-        print('🔍 Statistiques: ${_statistiques.value?.total} total');
       } else {
         throw Exception(response.message);
       }
     } catch (e) {
-      print('❌ Erreur lors du chargement des colis: $e');
       _errorMessage.value = e.toString();
     } finally {
-      print('🔍 loadColis() - Fin du chargement, isLoading = false');
       _isLoading.value = false;
     }
   }
 
   /// Actualiser les colis
   Future<void> refreshColis() async {
-    print('🔍 refreshColis() - Début de l\'actualisation');
-    print('🔍 refreshColis() - État actuel: isLoading=${_isLoading.value}');
     // Forcer le rafraîchissement même si isLoading est true
     _isLoading.value = false;
-    print('🔍 refreshColis() - isLoading forcé à false, appel de loadColis()');
     await loadColis();
-    print('🔍 refreshColis() - Actualisation terminée');
   }
 
   /// Charger les colis si la liste est vide
@@ -138,20 +124,7 @@ class DeliveryController extends GetxController {
 
   /// Diagnostic de l'état du controller
   void diagnosticState() {
-    print('🔍 ===== DIAGNOSTIC DELIVERYCONTROLLER =====');
-    print('🔍 - isLoading: $_isLoading');
-    print('🔍 - colis.length: ${_colis.length}');
-    print('🔍 - errorMessage: "$_errorMessage"');
-    print('🔍 - statistiques: ${_statistiques.value?.total ?? "null"}');
-    print(
-      '🔍 - Get.isRegistered<DeliveryController>(): ${Get.isRegistered<DeliveryController>()}',
-    );
-    print(
-      '🔍 - Get.find<DeliveryController>() == this: ${Get.find<DeliveryController>() == this}',
-    );
-
     if (_colis.isNotEmpty) {
-      print('🔍 Détails des colis:');
       for (int i = 0; i < _colis.length; i++) {
         final colis = _colis[i];
         print('🔍 - Colis $i: ${colis.code} (statut: ${colis.status})');
@@ -162,18 +135,12 @@ class DeliveryController extends GetxController {
 
   /// Forcer la mise à jour de l'interface
   void forceUpdateUI() {
-    print('🔄 Forçage de la mise à jour de l\'interface...');
     update();
-    print('✅ Interface mise à jour');
   }
 
   /// Démarrer une livraison
   Future<bool> startDelivery(int colisId) async {
     try {
-      print(
-        '🔍 Controller - Démarrage de la livraison pour le colis: $colisId',
-      );
-
       final authController = Get.find<AuthController>();
       final token = authController.authToken;
 
@@ -193,11 +160,8 @@ class DeliveryController extends GetxController {
           if (Get.isRegistered<LocationController>()) {
             final locationController = Get.find<LocationController>();
             await locationController.startLocationTracking();
-            print('📍 Suivi de localisation démarré pour la livraison');
           }
-        } catch (e) {
-          print('⚠️ Impossible de démarrer le suivi de localisation: $e');
-        }
+        } catch (e) {}
 
         // Rafraîchir la liste de manière transparente
         await refreshColis();
@@ -228,7 +192,6 @@ class DeliveryController extends GetxController {
         return false;
       }
     } catch (e) {
-      print('❌ Erreur lors du démarrage de la livraison: $e');
       _errorMessage.value = e.toString();
       return false;
     }
@@ -245,10 +208,6 @@ class DeliveryController extends GetxController {
     double? longitude,
   }) async {
     try {
-      print(
-        '🔍 Controller - Finalisation de la livraison pour le colis: $colisId',
-      );
-
       final authController = Get.find<AuthController>();
       final token = authController.authToken;
 
@@ -274,11 +233,8 @@ class DeliveryController extends GetxController {
           if (Get.isRegistered<LocationController>()) {
             final locationController = Get.find<LocationController>();
             await locationController.stopLocationTracking();
-            print('📍 Suivi de localisation arrêté après livraison');
           }
-        } catch (e) {
-          print('⚠️ Impossible d\'arrêter le suivi de localisation: $e');
-        }
+        } catch (e) {}
 
         // Rafraîchir la liste de manière transparente
         await refreshColis();
@@ -290,7 +246,6 @@ class DeliveryController extends GetxController {
         return false;
       }
     } catch (e) {
-      print('❌ Erreur lors de la finalisation de la livraison: $e');
       _errorMessage.value = e.toString();
       return false;
     }
@@ -303,10 +258,6 @@ class DeliveryController extends GetxController {
     required String noteLivraison,
   }) async {
     try {
-      print(
-        '🔍 Controller - Annulation de la livraison pour le colis: $colisId',
-      );
-
       final authController = Get.find<AuthController>();
       final token = authController.authToken;
 
@@ -333,7 +284,6 @@ class DeliveryController extends GetxController {
         return false;
       }
     } catch (e) {
-      print('❌ Erreur lors de l\'annulation de la livraison: $e');
       _errorMessage.value = e.toString();
       return false;
     }

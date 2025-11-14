@@ -117,8 +117,6 @@ class LocalNotificationStorageService {
   /// Marquer une notification comme lue
   Future<bool> markAsRead(String notificationId) async {
     try {
-      print('📱 Marquage de la notification $notificationId comme lue...');
-
       final notifications = await getAllNotifications();
       final notificationIndex = notifications.indexWhere(
         (n) => n.id == notificationId,
@@ -128,14 +126,11 @@ class LocalNotificationStorageService {
         notifications[notificationIndex] =
             notifications[notificationIndex].markAsRead();
         await saveNotifications(notifications);
-        print('✅ Notification marquée comme lue');
         return true;
       } else {
-        print('⚠️ Notification non trouvée');
         return false;
       }
     } catch (e) {
-      print('❌ Erreur lors du marquage de la notification: $e');
       return false;
     }
   }
@@ -143,8 +138,6 @@ class LocalNotificationStorageService {
   /// Marquer une notification comme non lue
   Future<bool> markAsUnread(String notificationId) async {
     try {
-      print('📱 Marquage de la notification $notificationId comme non lue...');
-
       final notifications = await getAllNotifications();
       final notificationIndex = notifications.indexWhere(
         (n) => n.id == notificationId,
@@ -154,14 +147,11 @@ class LocalNotificationStorageService {
         notifications[notificationIndex] =
             notifications[notificationIndex].markAsUnread();
         await saveNotifications(notifications);
-        print('✅ Notification marquée comme non lue');
         return true;
       } else {
-        print('⚠️ Notification non trouvée');
         return false;
       }
     } catch (e) {
-      print('❌ Erreur lors du marquage de la notification: $e');
       return false;
     }
   }
@@ -169,17 +159,13 @@ class LocalNotificationStorageService {
   /// Marquer toutes les notifications comme lues
   Future<bool> markAllAsRead() async {
     try {
-      print('📱 Marquage de toutes les notifications comme lues...');
-
       final notifications = await getAllNotifications();
       final updatedNotifications =
           notifications.map((n) => n.markAsRead()).toList();
 
       await saveNotifications(updatedNotifications);
-      print('✅ Toutes les notifications marquées comme lues');
       return true;
     } catch (e) {
-      print('❌ Erreur lors du marquage de toutes les notifications: $e');
       return false;
     }
   }
@@ -187,25 +173,15 @@ class LocalNotificationStorageService {
   /// Supprimer une notification
   Future<bool> deleteNotification(String notificationId) async {
     try {
-      print('📱 Suppression de la notification $notificationId...');
-
       final notifications = await getAllNotifications();
-      print(
-        '📱 Nombre de notifications avant suppression: ${notifications.length}',
-      );
 
       final initialCount = notifications.length;
       notifications.removeWhere((n) => n.id == notificationId);
       final finalCount = notifications.length;
 
-      print('📱 Notifications supprimées: ${initialCount - finalCount}');
-      print('📱 Nombre de notifications après suppression: $finalCount');
-
       await saveNotifications(notifications);
-      print('✅ Notification supprimée et sauvegardée');
       return true;
     } catch (e) {
-      print('❌ Erreur lors de la suppression de la notification: $e');
       return false;
     }
   }
@@ -213,15 +189,11 @@ class LocalNotificationStorageService {
   /// Supprimer toutes les notifications
   Future<bool> deleteAllNotifications() async {
     try {
-      print('📱 Suppression de toutes les notifications...');
-
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_notificationsKey);
 
-      print('✅ Toutes les notifications supprimées');
       return true;
     } catch (e) {
-      print('❌ Erreur lors de la suppression de toutes les notifications: $e');
       return false;
     }
   }
@@ -229,8 +201,6 @@ class LocalNotificationStorageService {
   /// Supprimer les notifications anciennes
   Future<bool> deleteOldNotifications({int daysOld = 30}) async {
     try {
-      print('📱 Suppression des notifications de plus de $daysOld jours...');
-
       final cutoffDate = DateTime.now().subtract(Duration(days: daysOld));
       final notifications = await getAllNotifications();
       final filteredNotifications =
@@ -239,10 +209,8 @@ class LocalNotificationStorageService {
       await saveNotifications(filteredNotifications);
 
       final deletedCount = notifications.length - filteredNotifications.length;
-      print('✅ $deletedCount notifications anciennes supprimées');
       return true;
     } catch (e) {
-      print('❌ Erreur lors de la suppression des notifications anciennes: $e');
       return false;
     }
   }
@@ -254,8 +222,6 @@ class LocalNotificationStorageService {
     int? limit,
   }) async {
     try {
-      print('📱 Filtrage des notifications: $filter, tri: $sort');
-
       List<LocalNotification> notifications = await getAllNotifications();
 
       // Appliquer le filtre
@@ -335,10 +301,8 @@ class LocalNotificationStorageService {
         notifications = notifications.take(limit).toList();
       }
 
-      print('📱 ${notifications.length} notifications filtrées');
       return notifications;
     } catch (e) {
-      print('❌ Erreur lors du filtrage des notifications: $e');
       return [];
     }
   }
@@ -346,15 +310,11 @@ class LocalNotificationStorageService {
   /// Obtenir les statistiques des notifications
   Future<NotificationStats> getStats() async {
     try {
-      print('📱 Calcul des statistiques des notifications...');
-
       final notifications = await getAllNotifications();
       final stats = NotificationStats.fromNotifications(notifications);
 
-      print('📱 Statistiques: ${stats.total} total, ${stats.unread} non lues');
       return stats;
     } catch (e) {
-      print('❌ Erreur lors du calcul des statistiques: $e');
       return NotificationStats(
         total: 0,
         unread: 0,
@@ -381,8 +341,6 @@ class LocalNotificationStorageService {
   /// Définir le nombre maximum de notifications stockées
   Future<bool> setMaxNotifications(int max) async {
     try {
-      print('📱 Définition du nombre maximum de notifications: $max');
-
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt(_maxNotificationsKey, max);
 
@@ -391,13 +349,10 @@ class LocalNotificationStorageService {
       if (notifications.length > max) {
         final limitedNotifications = notifications.take(max).toList();
         await saveNotifications(limitedNotifications);
-        print('📱 Notifications limitées à $max');
       }
 
-      print('✅ Nombre maximum de notifications défini');
       return true;
     } catch (e) {
-      print('❌ Erreur lors de la définition du nombre maximum: $e');
       return false;
     }
   }
@@ -405,8 +360,6 @@ class LocalNotificationStorageService {
   /// Rechercher des notifications
   Future<List<LocalNotification>> searchNotifications(String query) async {
     try {
-      print('📱 Recherche de notifications: "$query"');
-
       final notifications = await getAllNotifications();
       final lowercaseQuery = query.toLowerCase();
 
@@ -420,10 +373,8 @@ class LocalNotificationStorageService {
                 );
           }).toList();
 
-      print('📱 ${results.length} notifications trouvées');
       return results;
     } catch (e) {
-      print('❌ Erreur lors de la recherche de notifications: $e');
       return [];
     }
   }
@@ -462,8 +413,6 @@ class LocalNotificationStorageService {
   /// Nettoyer les données corrompues
   Future<bool> cleanupCorruptedData() async {
     try {
-      print('📱 Nettoyage des données corrompues...');
-
       final prefs = await SharedPreferences.getInstance();
       final notificationsJson = prefs.getStringList(_notificationsKey) ?? [];
 
@@ -473,9 +422,7 @@ class LocalNotificationStorageService {
         try {
           final notification = LocalNotification.fromMap(jsonDecode(json));
           validNotifications.add(notification);
-        } catch (e) {
-          print('⚠️ Notification corrompue ignorée: $e');
-        }
+        } catch (e) {}
       }
 
       // Sauvegarder les notifications valides
@@ -486,12 +433,8 @@ class LocalNotificationStorageService {
 
       final corruptedCount =
           notificationsJson.length - validNotifications.length;
-      print(
-        '✅ Nettoyage terminé: $corruptedCount notifications corrompues supprimées',
-      );
       return true;
     } catch (e) {
-      print('❌ Erreur lors du nettoyage des données: $e');
       return false;
     }
   }

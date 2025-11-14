@@ -121,8 +121,6 @@ class ForgotPasswordController extends GetxController {
     _isLoading.value = true;
 
     try {
-      print('🔍 Envoi du code OTP vers: $fullPhoneNumber');
-
       // Appel à l'API pour vérifier le numéro et envoyer l'OTP
       final response = await http.post(
         Uri.parse('$baseUrl/api/livreur/check-phone'),
@@ -133,14 +131,9 @@ class ForgotPasswordController extends GetxController {
         body: jsonEncode({'mobile': fullPhoneNumber}),
       );
 
-      print('🔍 Status Code: ${response.statusCode}');
-      print('🔍 Response Body: ${response.body}');
-
       final responseData = jsonDecode(response.body);
 
       if (response.statusCode == 200 && responseData['success'] == true) {
-        print('✅ Code OTP envoyé avec succès');
-
         Get.snackbar(
           'Code envoyé',
           responseData['message'] ??
@@ -153,7 +146,6 @@ class ForgotPasswordController extends GetxController {
         // Passer à l'étape suivante
         Get.to(() => const OtpVerificationScreen());
       } else {
-        print('❌ Erreur lors de l\'envoi du code OTP');
         Get.snackbar(
           'Erreur',
           responseData['message'] ?? 'Erreur lors de l\'envoi du code',
@@ -163,7 +155,6 @@ class ForgotPasswordController extends GetxController {
         );
       }
     } catch (e) {
-      print('❌ Erreur lors de l\'envoi du code OTP: $e');
       Get.snackbar(
         'Erreur',
         'Erreur de connexion. Vérifiez votre connexion internet.',
@@ -191,8 +182,6 @@ class ForgotPasswordController extends GetxController {
     _isLoading.value = true;
 
     try {
-      print('🔍 Vérification du code OTP: $otpCode pour: $fullPhoneNumber');
-
       // Appel à l'API pour vérifier le code OTP
       final response = await http.post(
         Uri.parse('$baseUrl/api/livreur/verify-otp'),
@@ -203,14 +192,9 @@ class ForgotPasswordController extends GetxController {
         body: jsonEncode({'mobile': fullPhoneNumber, 'otp_code': otpCode}),
       );
 
-      print('🔍 Status Code: ${response.statusCode}');
-      print('🔍 Response Body: ${response.body}');
-
       final responseData = jsonDecode(response.body);
 
       if (response.statusCode == 200 && responseData['success'] == true) {
-        print('✅ Code OTP vérifié avec succès');
-
         Get.snackbar(
           'Code vérifié',
           responseData['message'] ?? 'Code de vérification correct',
@@ -222,7 +206,6 @@ class ForgotPasswordController extends GetxController {
         // Passer à l'étape suivante
         Get.to(() => const ResetPasswordScreen());
       } else {
-        print('❌ Code OTP incorrect');
         Get.snackbar(
           'Code incorrect',
           responseData['message'] ?? 'Le code de vérification est incorrect',
@@ -232,7 +215,6 @@ class ForgotPasswordController extends GetxController {
         );
       }
     } catch (e) {
-      print('❌ Erreur lors de la vérification du code OTP: $e');
       Get.snackbar(
         'Erreur',
         'Erreur de connexion. Vérifiez votre connexion internet.',
@@ -271,8 +253,6 @@ class ForgotPasswordController extends GetxController {
     _isLoading.value = true;
 
     try {
-      print('🔍 Mise à jour du mot de passe pour: $fullPhoneNumber');
-
       // Appel à l'API pour mettre à jour le mot de passe
       final response = await http.post(
         Uri.parse('$baseUrl/api/livreur/update-password'),
@@ -287,14 +267,9 @@ class ForgotPasswordController extends GetxController {
         }),
       );
 
-      print('🔍 Status Code: ${response.statusCode}');
-      print('🔍 Response Body: ${response.body}');
-
       final responseData = jsonDecode(response.body);
 
       if (response.statusCode == 200 && responseData['success'] == true) {
-        print('✅ Mot de passe mis à jour avec succès');
-
         Get.snackbar(
           'Succès',
           responseData['message'] ??
@@ -307,7 +282,6 @@ class ForgotPasswordController extends GetxController {
         // Retourner à la page de connexion
         Get.offAll(() => const LoginScreen());
       } else {
-        print('❌ Erreur lors de la mise à jour du mot de passe');
         Get.snackbar(
           'Erreur',
           responseData['message'] ??
@@ -318,7 +292,6 @@ class ForgotPasswordController extends GetxController {
         );
       }
     } catch (e) {
-      print('❌ Erreur lors de la mise à jour du mot de passe: $e');
       Get.snackbar(
         'Erreur',
         'Erreur de connexion. Vérifiez votre connexion internet.',
@@ -359,8 +332,6 @@ class ForgotPasswordController extends GetxController {
     _isLoading.value = true;
 
     try {
-      print('🔍 Changement de mot de passe...');
-
       // Appel à l'API pour changer le mot de passe (avec token d'authentification)
       final response = await http.post(
         Uri.parse('$baseUrl/api/livreur/change-password'),
@@ -377,14 +348,9 @@ class ForgotPasswordController extends GetxController {
         }),
       );
 
-      print('🔍 Status Code: ${response.statusCode}');
-      print('🔍 Response Body: ${response.body}');
-
       final responseData = jsonDecode(response.body);
 
       if (response.statusCode == 200 && responseData['success'] == true) {
-        print('✅ Mot de passe changé avec succès');
-
         // Afficher une notification locale de succès
         await LocalNotificationService().showSuccessNotification(
           title: 'Mot de passe modifié',
@@ -398,7 +364,6 @@ class ForgotPasswordController extends GetxController {
         await Future.delayed(const Duration(milliseconds: 500));
         Get.back();
       } else {
-        print('❌ Erreur lors du changement de mot de passe');
         Get.snackbar(
           'Erreur',
           responseData['message'] ??
@@ -409,7 +374,6 @@ class ForgotPasswordController extends GetxController {
         );
       }
     } catch (e) {
-      print('❌ Erreur lors du changement de mot de passe: $e');
       Get.snackbar(
         'Erreur',
         'Erreur de connexion. Vérifiez votre connexion internet.',
@@ -426,8 +390,6 @@ class ForgotPasswordController extends GetxController {
     _isLoading.value = true;
 
     try {
-      print('🔍 Renvoi du code OTP vers: $fullPhoneNumber');
-
       // Appel à l'API pour renvoyer le code OTP
       final response = await http.post(
         Uri.parse('$baseUrl/api/livreur/resend-otp'),
@@ -438,14 +400,9 @@ class ForgotPasswordController extends GetxController {
         body: jsonEncode({'mobile': fullPhoneNumber}),
       );
 
-      print('🔍 Status Code: ${response.statusCode}');
-      print('🔍 Response Body: ${response.body}');
-
       final responseData = jsonDecode(response.body);
 
       if (response.statusCode == 200 && responseData['success'] == true) {
-        print('✅ Code OTP renvoyé avec succès');
-
         Get.snackbar(
           'Code renvoyé',
           responseData['message'] ??
@@ -455,7 +412,6 @@ class ForgotPasswordController extends GetxController {
           colorText: Colors.white,
         );
       } else {
-        print('❌ Erreur lors du renvoi du code OTP');
         Get.snackbar(
           'Erreur',
           responseData['message'] ?? 'Erreur lors du renvoi du code',
@@ -465,7 +421,6 @@ class ForgotPasswordController extends GetxController {
         );
       }
     } catch (e) {
-      print('❌ Erreur lors du renvoi du code OTP: $e');
       Get.snackbar(
         'Erreur',
         'Erreur de connexion. Vérifiez votre connexion internet.',

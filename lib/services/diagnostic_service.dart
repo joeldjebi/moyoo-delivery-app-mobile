@@ -17,7 +17,6 @@ class DiagnosticService extends GetxService {
   @override
   void onInit() {
     super.onInit();
-    print('🔍 DiagnosticService initialisé');
   }
 
   /// Exécuter un diagnostic complet
@@ -51,19 +50,11 @@ class DiagnosticService extends GetxService {
     _diagnosticReport.value = report.toString();
     _isRunning.value = false;
 
-    // Afficher le rapport complet dans les logs
-    print('🔍 RAPPORT DE DIAGNOSTIC COMPLET');
-    print('=' * 50);
-    print(_diagnosticReport.value);
-    print('=' * 50);
-    print('🏁 FIN DU RAPPORT DE DIAGNOSTIC');
-
     return _diagnosticReport.value;
   }
 
   /// Diagnostic des services de géolocalisation
   Future<void> _diagnoseLocationServices(StringBuffer report) async {
-    print('🔍 Démarrage du diagnostic de géolocalisation...');
     report.writeln('📍 DIAGNOSTIC GÉOLOCALISATION');
     report.writeln('-' * 30);
 
@@ -80,16 +71,11 @@ class DiagnosticService extends GetxService {
 
       // Tenter d'obtenir la position
       try {
-        print('🔍 Tentative d\'acquisition de position GPS...');
-        print('⏱️ Timeout configuré: 30 secondes');
-        print('🎯 Précision demandée: Élevée');
-
         final position = await Geolocator.getCurrentPosition(
           desiredAccuracy: LocationAccuracy.high,
           timeLimit: const Duration(seconds: 30),
         );
 
-        print('✅ Position GPS acquise avec succès');
         report.writeln(
           'Position actuelle: ${position.latitude}, ${position.longitude}',
         );
@@ -108,7 +94,6 @@ class DiagnosticService extends GetxService {
 
         report.writeln('Statut: ✅ GPS fonctionnel');
       } catch (e) {
-        print('❌ Erreur lors de l\'acquisition GPS: $e');
         report.writeln('Erreur GPS: ❌ $e');
 
         // Ajouter des suggestions spécifiques selon le type d'erreur
@@ -142,7 +127,6 @@ class DiagnosticService extends GetxService {
 
   /// Diagnostic de connectivité
   Future<void> _diagnoseConnectivity(StringBuffer report) async {
-    print('🔍 Démarrage du diagnostic de connectivité...');
     report.writeln('🌐 DIAGNOSTIC CONNECTIVITÉ');
     report.writeln('-' * 30);
 
@@ -172,7 +156,6 @@ class DiagnosticService extends GetxService {
 
   /// Diagnostic des services
   Future<void> _diagnoseServices(StringBuffer report) async {
-    print('🔍 Démarrage du diagnostic des services...');
     report.writeln('⚙️ DIAGNOSTIC SERVICES');
     report.writeln('-' * 30);
 
@@ -204,7 +187,6 @@ class DiagnosticService extends GetxService {
 
   /// Diagnostic des permissions
   Future<void> _diagnosePermissions(StringBuffer report) async {
-    print('🔍 Démarrage du diagnostic des permissions...');
     report.writeln('🔐 DIAGNOSTIC PERMISSIONS');
     report.writeln('-' * 30);
 
@@ -232,7 +214,6 @@ class DiagnosticService extends GetxService {
 
   /// Ajouter des recommandations
   void _addRecommendations(StringBuffer report) {
-    print('🔍 Génération des recommandations...');
     report.writeln('💡 RECOMMANDATIONS');
     report.writeln('-' * 30);
 

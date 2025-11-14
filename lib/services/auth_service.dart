@@ -22,15 +22,8 @@ class AuthService {
   }) async {
     try {
       final url = Uri.parse('$_baseUrl$_loginEndpoint');
-      print('🔍 Tentative de connexion vers: $url');
-      print('🔍 Mobile: $mobile');
-      print('🔍 Headers: $_defaultHeaders');
-
-      // Envoyer le mot de passe en clair (comme dans le curl qui fonctionne)
-      print('🔍 Mot de passe: $password');
 
       final request = LoginRequest(mobile: mobile, password: password);
-      print('🔍 Request Body: ${jsonEncode(request.toJson())}');
 
       final response = await http.post(
         url,
@@ -38,17 +31,11 @@ class AuthService {
         body: jsonEncode(request.toJson()),
       );
 
-      print('🔍 Status Code: ${response.statusCode}');
-
       final responseData = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
-        print('✅ Connexion réussie');
         return LoginResponse.fromJson(responseData);
       } else {
-        print('❌ Erreur de connexion - Status: ${response.statusCode}');
-        print('❌ Response Data: $responseData');
-
         // Extraire le message d'erreur de la réponse
         String errorMessage = 'Erreur de connexion';
         if (responseData is Map<String, dynamic>) {
@@ -87,15 +74,12 @@ class AuthService {
         );
       }
     } on http.ClientException catch (e) {
-      print('❌ ClientException: $e');
       throw ApiError(
         message: 'Erreur de connexion. Vérifiez votre connexion internet.',
       );
     } on FormatException catch (e) {
-      print('❌ FormatException: $e');
       throw ApiError(message: 'Erreur de format de réponse du serveur.');
     } catch (e) {
-      print('❌ Erreur inattendue: $e');
       throw ApiError(message: 'Erreur inattendue: ${e.toString()}');
     }
   }
@@ -173,7 +157,6 @@ class AuthService {
 
       return null;
     } catch (e) {
-      print('Erreur lors de la récupération du profil: $e');
       return null;
     }
   }
@@ -232,7 +215,6 @@ class AuthService {
 
       return null;
     } catch (e) {
-      print('Erreur lors de la mise à jour du profil: $e');
       return null;
     }
   }

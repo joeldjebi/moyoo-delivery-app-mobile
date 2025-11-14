@@ -32,7 +32,6 @@ class LocationService extends GetxService {
   @override
   void onInit() {
     super.onInit();
-    print('📍 LocationService initialisé');
     _checkLocationService();
   }
 
@@ -71,7 +70,6 @@ class LocationService extends GetxService {
       _locationError.value = '';
       return true;
     } catch (e) {
-      print('❌ Erreur lors de la vérification du service de localisation: $e');
       _locationError.value = 'Erreur: $e';
       return false;
     }
@@ -80,8 +78,6 @@ class LocationService extends GetxService {
   /// Obtenir la position actuelle
   Future<Position?> getCurrentPosition() async {
     try {
-      print('📍 Récupération de la position actuelle...');
-
       bool serviceReady = await _checkLocationService();
       if (!serviceReady) {
         return null;
@@ -99,10 +95,8 @@ class LocationService extends GetxService {
       _currentPosition.value = position;
       _locationError.value = '';
 
-      print('📍 Position obtenue: ${position.latitude}, ${position.longitude}');
       return position;
     } catch (e) {
-      print('❌ Erreur lors de la récupération de la position: $e');
       _locationError.value = 'Erreur: $e';
       return null;
     }
@@ -114,8 +108,6 @@ class LocationService extends GetxService {
     double distanceFilter = 10.0, // en mètres
   }) async {
     try {
-      print('📍 Démarrage du suivi de position...');
-
       bool serviceReady = await _checkLocationService();
       if (!serviceReady) {
         return false;
@@ -139,29 +131,22 @@ class LocationService extends GetxService {
         ),
       ).listen(
         (Position position) {
-          print(
-            '📍 Position mise à jour: ${position.latitude}, ${position.longitude}',
-          );
           _currentPosition.value = position;
           _locationError.value = '';
         },
         onError: (error) {
-          print('❌ Erreur dans le stream de position: $error');
           _locationError.value = 'Erreur de suivi: $error';
 
           // Si c'est un timeout, essayer de redémarrer le stream
           if (error.toString().contains('TimeoutException')) {
-            print('🔄 Tentative de redémarrage du stream après timeout...');
             _restartPositionStream();
           }
         },
       );
 
       _isTracking.value = true;
-      print('✅ Suivi de position démarré');
       return true;
     } catch (e) {
-      print('❌ Erreur lors du démarrage du suivi: $e');
       _locationError.value = 'Erreur: $e';
       return false;
     }
@@ -170,16 +155,10 @@ class LocationService extends GetxService {
   /// Arrêter le suivi de position
   Future<void> stopLocationTracking() async {
     try {
-      print('📍 Arrêt du suivi de position...');
-
       await _positionStreamSubscription?.cancel();
       _positionStreamSubscription = null;
       _isTracking.value = false;
-
-      print('✅ Suivi de position arrêté');
-    } catch (e) {
-      print('❌ Erreur lors de l\'arrêt du suivi: $e');
-    }
+    } catch (e) {}
   }
 
   /// Calculer la distance entre deux positions
@@ -209,7 +188,6 @@ class LocationService extends GetxService {
       // ou OpenStreetMap Nominatim. Ici, on retourne juste les coordonnées formatées
       return 'Lat: ${latitude.toStringAsFixed(6)}, Lng: ${longitude.toStringAsFixed(6)}';
     } catch (e) {
-      print('❌ Erreur lors du géocodage inverse: $e');
       return null;
     }
   }
@@ -244,8 +222,6 @@ class LocationService extends GetxService {
   /// Redémarrer le stream de position après une erreur
   Future<void> _restartPositionStream() async {
     try {
-      print('🔄 Redémarrage du stream de position...');
-
       // Arrêter le stream actuel
       await _positionStreamSubscription?.cancel();
       _positionStreamSubscription = null;
@@ -255,7 +231,6 @@ class LocationService extends GetxService {
 
       // Redémarrer le stream si le suivi est toujours actif
       if (_isTracking.value) {
-        print('🔄 Redémarrage du stream de position...');
         _positionStreamSubscription = Geolocator.getPositionStream(
           locationSettings: LocationSettings(
             accuracy: LocationAccuracy.high,
@@ -263,37 +238,19 @@ class LocationService extends GetxService {
           ),
         ).listen(
           (Position position) {
-            print(
-              '📍 Position mise à jour (redémarrage): ${position.latitude}, ${position.longitude}',
-            );
             _currentPosition.value = position;
             _locationError.value = '';
           },
           onError: (error) {
-            print('❌ Erreur dans le stream redémarré: $error');
             _locationError.value = 'Erreur de suivi: $error';
           },
         );
-        print('✅ Stream de position redémarré');
       }
     } catch (e) {
-      print('❌ Erreur lors du redémarrage du stream: $e');
       _locationError.value = 'Erreur de redémarrage: $e';
     }
   }
 
   /// Diagnostic de l'état du service
-  void diagnosticState() {
-    print('📍 ===== DIAGNOSTIC LOCATIONSERVICE =====');
-    print('📍 - isLocationEnabled: $_isLocationEnabled');
-    print('📍 - isTracking: $_isTracking');
-    print(
-      '📍 - currentPosition: ${_currentPosition.value?.latitude ?? "null"}, ${_currentPosition.value?.longitude ?? "null"}',
-    );
-    print('📍 - locationError: "$_locationError"');
-    print(
-      '📍 - positionStreamSubscription: ${_positionStreamSubscription != null ? "active" : "inactive"}',
-    );
-    print('📍 ======================================');
-  }
+  void diagnosticState() {}
 }

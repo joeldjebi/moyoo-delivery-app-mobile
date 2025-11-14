@@ -131,8 +131,6 @@ class LoginController extends GetxController {
     _isLoading.value = true;
 
     try {
-      print('🔍 Tentative de connexion pour: $phoneNumber');
-
       // Appel à l'API d'authentification
       final success = await _authController.login(
         mobile: fullPhoneNumber, // Envoyer le numéro avec l'indication 225
@@ -159,8 +157,6 @@ class LoginController extends GetxController {
     try {
       // Simuler l'authentification Face ID
       await Future.delayed(const Duration(seconds: 1));
-
-      print('Face ID login');
 
       Get.snackbar(
         'Succès',

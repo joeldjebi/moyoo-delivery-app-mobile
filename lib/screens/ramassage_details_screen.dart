@@ -52,13 +52,8 @@ class _RamassageDetailsScreenState extends State<RamassageDetailsScreen> {
   /// Vérifier les flags d'actualisation des notifications
   void _checkNotificationRefreshFlags() {
     try {
-      print(
-        '🔄 Vérification des flags d\'actualisation des notifications (RamassageDetailsScreen)',
-      );
       NotificationService.checkAndProcessRefreshFlags();
-    } catch (e) {
-      print('❌ Erreur lors de la vérification des flags: $e');
-    }
+    } catch (e) {}
   }
 
   /// Envoyer une notification locale pour les actions de ramassage
@@ -93,11 +88,7 @@ class _RamassageDetailsScreenState extends State<RamassageDetailsScreen> {
             payload: 'ramassage_action_info',
           );
       }
-
-      print('✅ Notification locale envoyée: $title');
-    } catch (e) {
-      print('❌ Erreur lors de l\'envoi de la notification locale: $e');
-    }
+    } catch (e) {}
   }
 
   Future<void> _loadRamassageDetails() async {
@@ -128,12 +119,6 @@ class _RamassageDetailsScreenState extends State<RamassageDetailsScreen> {
           _ramassageDetail = response.data;
           _isLoading = false;
         });
-        print(
-          '🔍 Screen - Ramassage details-->: ${_ramassageDetail!.notesLivreur}',
-        );
-        print(
-          '🔍 Screen - Ramassage details: ${_ramassageDetail!.notesRamassage}',
-        );
       } else {
         setState(() {
           _errorMessage = response.message;
@@ -1268,13 +1253,6 @@ class _RamassageDetailsScreenState extends State<RamassageDetailsScreen> {
       final raison = result['raison'] ?? '';
       final commentaire = result['commentaire'] ?? '';
 
-      print('🔄 ===== ANNULATION RAMASSAGE - API CALL =====');
-      print(
-        '🔄 Ramassage ID: ${_ramassageDetail!.id}, Code: ${_ramassageDetail!.codeRamassage}',
-      );
-      print('🔄 Raison: $raison');
-      print('🔄 Commentaire: $commentaire');
-
       // Appel à l'API d'annulation
       final authController = Get.find<AuthController>();
       final response = await CancelRamassageService.cancelRamassage(
@@ -1285,14 +1263,10 @@ class _RamassageDetailsScreenState extends State<RamassageDetailsScreen> {
       );
 
       if (response.success) {
-        print('✅ Ramassage annulé avec succès via API');
-
         // Actualiser les données de manière transparente
         try {
           await _ramassageController.refreshRamassages();
-        } catch (e) {
-          print('⚠️ Erreur lors de l\'actualisation des données: $e');
-        }
+        } catch (e) {}
 
         // Envoyer une notification locale de succès
         await _showLocalNotification(
@@ -1305,42 +1279,28 @@ class _RamassageDetailsScreenState extends State<RamassageDetailsScreen> {
         // Attendre un court délai pour que l'utilisateur voie le message
         await Future.delayed(const Duration(milliseconds: 500));
 
-        // Retourner à l'écran d'origine avec succès
-        print(
-          '🔍 Retour à l\'écran d\'origine: ${widget.fromPage ?? "inconnu"}',
-        );
-
         // Utiliser la page d'origine pour le retour
         if (widget.fromPage != null) {
           switch (widget.fromPage) {
             case 'dashboard':
               Get.offAllNamed('/dashboard?tab=ramassages');
-              print('🔍 Navigation vers le dashboard (onglet Ramassages)');
               break;
             case 'ramassage_list':
               Get.back(result: true);
-              print('🔍 Retour à la liste des ramassages');
               break;
             default:
               // Fallback vers le dashboard avec onglet Ramassages
               Get.offAllNamed('/dashboard?tab=ramassages');
-              print(
-                '🔍 Navigation par défaut vers le dashboard (onglet Ramassages)',
-              );
           }
         } else {
           // Si pas de page d'origine spécifiée, essayer Get.back()
           try {
             Get.back(result: true);
-            print('🔍 Get.back() exécuté avec succès');
           } catch (e) {
-            print('⚠️ Get.back() a échoué: $e');
             Get.offAllNamed('/dashboard');
-            print('🔍 Navigation de secours vers le dashboard');
           }
         }
       } else {
-        print('❌ Échec de l\'annulation du ramassage: ${response.message}');
         // Envoyer une notification locale d'erreur
         await _showLocalNotification(
           title: '❌ Erreur',
@@ -1348,9 +1308,7 @@ class _RamassageDetailsScreenState extends State<RamassageDetailsScreen> {
           type: 'error',
         );
       }
-    } else {
-      print('❌ Annulation de ramassage échouée ou annulée');
-    }
+    } else {}
   }
 
   /// Construire la section des notes
@@ -1480,9 +1438,6 @@ class _RamassageDetailsScreenState extends State<RamassageDetailsScreen> {
         _ramassageDetail!.colisLies.length > 10
             ? 10
             : _ramassageDetail!.colisLies.length;
-    print(
-      '🔍 Displaying $count colis out of ${_ramassageDetail!.colisLies.length} total',
-    );
     return count;
   }
 
@@ -1504,7 +1459,6 @@ class _RamassageDetailsScreenState extends State<RamassageDetailsScreen> {
       photoUrls.add(photoUrl);
     }
 
-    print('🔍 Extracted ${photoUrls.length} photo URLs: $photoUrls');
     return photoUrls;
   }
 

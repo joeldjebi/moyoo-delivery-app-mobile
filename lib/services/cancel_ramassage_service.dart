@@ -17,11 +17,6 @@ class CancelRamassageService {
         '${ApiConstants.baseUrl}$_cancelRamassageEndpoint/$ramassageId/cancel',
       );
 
-      print('🔍 Annulation du ramassage vers: $url');
-      print('🔍 Ramassage ID: $ramassageId');
-      print('🔍 Raison: $raison');
-      print('🔍 Commentaire: $commentaire');
-
       final response = await http.post(
         url,
         headers: {
@@ -32,16 +27,11 @@ class CancelRamassageService {
         body: jsonEncode({'raison': raison, 'commentaire': commentaire}),
       );
 
-      print('🔍 Status Code: ${response.statusCode}');
-      print('🔍 Response Body: ${response.body}');
-
       final responseData = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
-        print('✅ Ramassage annulé avec succès');
         return CancelRamassageResponse.fromJson(responseData);
       } else {
-        print('❌ Erreur lors de l\'annulation du ramassage');
         return CancelRamassageResponse(
           success: false,
           message:
@@ -50,7 +40,6 @@ class CancelRamassageService {
         );
       }
     } catch (e) {
-      print('❌ Erreur lors de l\'annulation du ramassage: $e');
       return CancelRamassageResponse(
         success: false,
         message: 'Erreur de connexion: $e',

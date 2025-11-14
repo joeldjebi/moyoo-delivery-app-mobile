@@ -33,9 +33,6 @@ class FcmService {
           )
           .timeout(const Duration(seconds: 30));
 
-      print('🔍 FCM Service - Status: ${response.statusCode}');
-      print('🔍 FCM Service - Response: ${response.body}');
-
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
         return FcmTokenResponse.fromJson(responseData);
@@ -49,7 +46,6 @@ class FcmService {
         );
       }
     } catch (e) {
-      print('❌ Erreur FCM Service: $e');
       return FcmTokenResponse(
         success: false,
         message: 'Erreur de connexion: $e',
@@ -74,9 +70,6 @@ class FcmService {
           )
           .timeout(const Duration(seconds: 30));
 
-      print('🔍 FCM Service DELETE - Status: ${response.statusCode}');
-      print('🔍 FCM Service DELETE - Response: ${response.body}');
-
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
         return FcmTokenResponse.fromJson(responseData);
@@ -90,7 +83,6 @@ class FcmService {
         );
       }
     } catch (e) {
-      print('❌ Erreur FCM Service DELETE: $e');
       return FcmTokenResponse(
         success: false,
         message: 'Erreur de connexion: $e',

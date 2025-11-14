@@ -56,15 +56,7 @@ class NotificationManagerService {
   }
 
   /// Configurer les handlers Firebase
-  void _setupFirebaseHandlers() {
-    print(
-      '🔄 Configuration des handlers Firebase dans NotificationManagerService...',
-    );
-
-    // Note: Les handlers Firebase sont déjà configurés dans NotificationService
-    // pour éviter les conflits. Ce service se contente de gérer le stockage local.
-    print('✅ Handlers Firebase gérés par NotificationService');
-  }
+  void _setupFirebaseHandlers() {}
 
   /// Ajouter une notification manuelle
   Future<bool> addNotification({

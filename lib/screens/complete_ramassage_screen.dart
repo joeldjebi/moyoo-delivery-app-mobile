@@ -104,11 +104,7 @@ class _CompleteRamassageScreenState extends State<CompleteRamassageScreen> {
             payload: 'ramassage_action_info',
           );
       }
-
-      print('✅ Notification locale envoyée: $title');
-    } catch (e) {
-      print('❌ Erreur lors de l\'envoi de la notification locale: $e');
-    }
+    } catch (e) {}
   }
 
   @override
@@ -837,13 +833,6 @@ class _CompleteRamassageScreenState extends State<CompleteRamassageScreen> {
       });
 
       try {
-        print('🔄 ===== ANNULATION RAMASSAGE - API CALL =====');
-        print(
-          '🔄 Ramassage ID: ${widget.ramassage!.id}, Code: ${widget.ramassage!.codeRamassage}',
-        );
-        print('🔄 Raison: $raison');
-        print('🔄 Commentaire: $commentaire');
-
         // Appel à l'API d'annulation
         final response = await CancelRamassageService.cancelRamassage(
           ramassageId: widget.ramassage!.id,
@@ -853,15 +842,11 @@ class _CompleteRamassageScreenState extends State<CompleteRamassageScreen> {
         );
 
         if (response.success) {
-          print('✅ Ramassage annulé avec succès via API');
-
           // Actualiser les données de manière transparente
           try {
             final ramassageController = Get.find<RamassageController>();
             await ramassageController.refreshRamassages();
-          } catch (e) {
-            print('⚠️ Erreur lors de l\'actualisation des données: $e');
-          }
+          } catch (e) {}
 
           // Envoyer une notification locale de succès
           await _showLocalNotification(
@@ -875,45 +860,32 @@ class _CompleteRamassageScreenState extends State<CompleteRamassageScreen> {
           await Future.delayed(const Duration(milliseconds: 500));
 
           // Retourner à l'écran d'origine avec succès
-          print(
-            '🔍 Retour à l\'écran d\'origine: ${widget.fromPage ?? "inconnu"}',
-          );
 
           // Utiliser la page d'origine pour le retour
           if (widget.fromPage != null) {
             switch (widget.fromPage) {
               case 'dashboard':
                 Get.offAllNamed('/dashboard?tab=ramassages');
-                print('🔍 Navigation vers le dashboard (onglet Ramassages)');
                 break;
               case 'ramassage_list':
                 Get.back(result: true);
-                print('🔍 Retour à la liste des ramassages');
                 break;
               case 'ramassage_details':
                 Get.back(result: true);
-                print('🔍 Retour aux détails du ramassage');
                 break;
               default:
                 // Fallback vers le dashboard avec onglet Ramassages
                 Get.offAllNamed('/dashboard?tab=ramassages');
-                print(
-                  '🔍 Navigation par défaut vers le dashboard (onglet Ramassages)',
-                );
             }
           } else {
             // Si pas de page d'origine spécifiée, essayer Get.back()
             try {
               Get.back(result: true);
-              print('🔍 Get.back() exécuté avec succès');
             } catch (e) {
-              print('⚠️ Get.back() a échoué: $e');
               Get.offAllNamed('/dashboard');
-              print('🔍 Navigation de secours vers le dashboard');
             }
           }
         } else {
-          print('❌ Échec de l\'annulation du ramassage: ${response.message}');
           // Envoyer une notification locale d'erreur
           await _showLocalNotification(
             title: '❌ Erreur',
@@ -922,7 +894,6 @@ class _CompleteRamassageScreenState extends State<CompleteRamassageScreen> {
           );
         }
       } catch (e) {
-        print('❌ Erreur lors de l\'annulation du ramassage: $e');
         // Envoyer une notification locale d'erreur
         await _showLocalNotification(
           title: '❌ Erreur',
@@ -934,8 +905,6 @@ class _CompleteRamassageScreenState extends State<CompleteRamassageScreen> {
           _isLoading = false;
         });
       }
-    } else {
-      print('❌ Annulation de ramassage échouée ou annulée');
     }
   }
 
@@ -973,17 +942,12 @@ class _CompleteRamassageScreenState extends State<CompleteRamassageScreen> {
         token: token,
       );
 
-      print('🔍 Response success: ${response.success}');
-      print('🔍 Response message: ${response.message}');
-
       if (response.success) {
         // Actualiser les données de manière transparente avant de retourner
         try {
           final ramassageController = Get.find<RamassageController>();
           await ramassageController.refreshRamassages();
-        } catch (e) {
-          print('⚠️ Erreur lors de l\'actualisation des données: $e');
-        }
+        } catch (e) {}
 
         // Envoyer une notification locale de succès
         await _showLocalNotification(
@@ -997,41 +961,29 @@ class _CompleteRamassageScreenState extends State<CompleteRamassageScreen> {
         await Future.delayed(const Duration(milliseconds: 500));
 
         // Retourner à l'écran d'origine avec succès
-        print(
-          '🔍 Retour à l\'écran d\'origine: ${widget.fromPage ?? "inconnu"}',
-        );
 
         // Utiliser la page d'origine pour le retour
         if (widget.fromPage != null) {
           switch (widget.fromPage) {
             case 'dashboard':
               Get.offAllNamed('/dashboard?tab=ramassages');
-              print('🔍 Navigation vers le dashboard (onglet Ramassages)');
               break;
             case 'ramassage_list':
               Get.back(result: true);
-              print('🔍 Retour à la liste des ramassages');
               break;
             case 'ramassage_details':
               Get.back(result: true);
-              print('🔍 Retour aux détails du ramassage');
               break;
             default:
               // Fallback vers le dashboard avec onglet Ramassages
               Get.offAllNamed('/dashboard?tab=ramassages');
-              print(
-                '🔍 Navigation par défaut vers le dashboard (onglet Ramassages)',
-              );
           }
         } else {
           // Si pas de page d'origine spécifiée, essayer Get.back()
           try {
             Get.back(result: true);
-            print('🔍 Get.back() exécuté avec succès');
           } catch (e) {
-            print('⚠️ Get.back() a échoué: $e');
             Get.offAllNamed('/dashboard');
-            print('🔍 Navigation de secours vers le dashboard');
           }
         }
       } else {

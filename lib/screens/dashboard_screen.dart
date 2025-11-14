@@ -57,7 +57,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     super.didChangeDependencies();
     // Rafraîchir les données quand l'utilisateur revient sur cette page
     if (_dataLoaded) {
-      print('🔍 didChangeDependencies() - Rafraîchissement des données');
       _refreshData();
       // Vérifier l'enregistrement FCM au retour sur le dashboard
       _ensureFcmTokenRegistered();
@@ -84,35 +83,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
   /// Enregistrer le token FCM automatiquement
   void _registerFcmToken() async {
     try {
-      print('🔄 Tentative d\'enregistrement du token FCM...');
       bool success = await NotificationService.registerFcmTokenOnServer();
 
       if (success) {
-        print('✅ Token FCM enregistré avec succès sur le serveur');
-      } else {
-        print('❌ Échec de l\'enregistrement du token FCM');
-      }
-    } catch (e) {
-      print('❌ Erreur lors de l\'enregistrement du token FCM: $e');
-    }
+      } else {}
+    } catch (e) {}
   }
 
   /// Vérifier et enregistrer le token FCM si nécessaire
   void _ensureFcmTokenRegistered() async {
     try {
-      print('🔍 Vérification de l\'état d\'enregistrement du token FCM...');
-
       // Vérifier si le token FCM est déjà enregistré
       final isRegistered = await NotificationService.isFcmTokenRegistered();
       if (isRegistered) {
-        print('✅ Token FCM déjà enregistré et valide');
         return;
       }
 
       // Vérifier si le token FCM est disponible
       final fcmToken = NotificationService.fcmToken;
       if (fcmToken == null || fcmToken.isEmpty) {
-        print('⚠️ Token FCM non disponible, réinitialisation complète...');
         await NotificationService.forceReinitializeAndSetup();
         return;
       }
@@ -120,15 +109,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
       // Vérifier si l'utilisateur est connecté
       final authController = Get.find<AuthController>();
       if (!authController.isLoggedIn || authController.authToken.isEmpty) {
-        print('⚠️ Utilisateur non connecté, enregistrement FCM reporté');
         return;
       }
 
       // Enregistrer le token FCM
       _registerFcmToken();
-    } catch (e) {
-      print('❌ Erreur lors de la vérification FCM: $e');
-    }
+    } catch (e) {}
   }
 
   /// Charger les données du dashboard
@@ -781,6 +767,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         return RefreshIndicator(
           onRefresh: () => controller.refreshColis(),
           child: ListView.builder(
+            physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.symmetric(
               horizontal: AppDimensions.spacingM,
               vertical: AppDimensions.spacingS,
@@ -1243,15 +1230,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final success = await ramassageController.startRamassage(ramassage.id);
 
       if (success) {
-        print(
-          '🔄 Ramassage ID: ${ramassage.id}, Code: ${ramassage.codeRamassage}',
-        );
-        print('🔄 État avant rafraîchissement:');
-        print(
-          '🔄 - Nombre de ramassages: ${ramassageController.ramassages.length}',
-        );
-        print('🔄 - isLoading: ${ramassageController.isLoading}');
-
         // Mise à jour transparente de la liste
         await ramassageController.refreshRamassages();
 

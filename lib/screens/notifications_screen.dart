@@ -24,13 +24,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   Future<void> _loadNotifications() async {
-    print('🔄 ===== CHARGEMENT DES NOTIFICATIONS =====');
-    print('🔄 Appel de _notificationManager.refreshNotifications()...');
     await _notificationManager.refreshNotifications();
-    print('🔄 Chargement terminé');
-    print(
-      '🔄 Nombre de notifications dans le manager: ${_notificationManager.notifications.length}',
-    );
   }
 
   @override
@@ -83,11 +77,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Widget _buildNotificationsList() {
     return Obx(() {
       final notifications = _notificationManager.notifications;
-      print('🎯 ===== BUILD NOTIFICATIONS LIST =====');
-      print('🎯 Nombre de notifications reçues: ${notifications.length}');
-      print(
-        '🎯 IDs des notifications: ${notifications.map((n) => n.id).toList()}',
-      );
 
       if (notifications.isEmpty) {
         return _buildEmptyState();
@@ -96,10 +85,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       // Filtrer et trier les notifications
       List<LocalNotification> filteredNotifications =
           _filterAndSortNotifications(notifications);
-      print('🎯 Notifications filtrées: ${filteredNotifications.length}');
-      print(
-        '🎯 IDs des notifications filtrées: ${filteredNotifications.map((n) => n.id).toList()}',
-      );
 
       if (filteredNotifications.isEmpty) {
         return _buildEmptyState();
@@ -110,9 +95,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         itemCount: filteredNotifications.length,
         itemBuilder: (context, index) {
           final notification = filteredNotifications[index];
-          print(
-            '🎯 Construction de la carte pour notification: ${notification.id}',
-          );
           return _buildNotificationCard(notification);
         },
       );
@@ -448,13 +430,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   // Méthodes d'action
   Future<void> _markAllAsRead() async {
-    print('🔧 Marquage de toutes les notifications comme lues...');
     await _notificationManager.markAllAsRead();
     setState(() {});
   }
 
   Future<void> _deleteAllNotifications() async {
-    print('🔧 Suppression de toutes les notifications...');
     final confirmed = await _showDeleteAllConfirmation();
     if (confirmed) {
       await _notificationManager.deleteAllNotifications();
@@ -512,11 +492,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     String action,
     LocalNotification notification,
   ) async {
-    print('🔧 Action demandée: $action pour notification: ${notification.id}');
-
     switch (action) {
       case 'mark_read':
-        print('🔧 Marquage comme lu/non lu...');
         if (notification.isRead) {
           // Marquer comme non lu
           await _notificationManager.markAsUnread(notification.id);
@@ -528,15 +505,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         setState(() {});
         break;
       case 'delete':
-        print('🔧 Demande de suppression...');
         final confirmed = await _showDeleteConfirmation(notification);
-        print('🔧 Confirmation: $confirmed');
         if (confirmed) {
-          print('🗑️ Suppression de la notification: ${notification.id}');
           final success = await _notificationManager.deleteNotification(
             notification.id,
           );
-          print('🗑️ Résultat de la suppression: $success');
 
           // Forcer la mise à jour de l'interface dans tous les cas
           setState(() {});

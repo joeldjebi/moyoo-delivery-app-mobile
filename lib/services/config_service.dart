@@ -24,7 +24,6 @@ class ConfigService extends GetxService {
   @override
   void onInit() {
     super.onInit();
-    print('⚙️ ConfigService initialisé');
     _checkSocketAvailability();
   }
 
@@ -35,11 +34,7 @@ class ConfigService extends GetxService {
       // Pour l'instant, on assume que Socket.IO n'est pas disponible
       _socketAvailable.value = false;
       _useSocket.value = false;
-      print(
-        '⚠️ Socket.IO non disponible, utilisation de l\'API REST uniquement',
-      );
     } catch (e) {
-      print('❌ Erreur lors de la vérification Socket.IO: $e');
       _socketAvailable.value = false;
       _useSocket.value = false;
     }
@@ -48,19 +43,16 @@ class ConfigService extends GetxService {
   /// Mettre à jour l'URL de l'API
   void updateApiUrl(String url) {
     _apiUrl.value = url;
-    print('🔄 URL API mise à jour: $url');
   }
 
   /// Mettre à jour l'URL Socket.IO
   void updateSocketUrl(String url) {
     _socketUrl.value = url;
-    print('🔄 URL Socket.IO mise à jour: $url');
   }
 
   /// Activer/désactiver Socket.IO
   void setUseSocket(bool useSocket) {
     _useSocket.value = useSocket;
-    print('🔄 Socket.IO ${useSocket ? 'activé' : 'désactivé'}');
   }
 
   /// Marquer Socket.IO comme disponible
@@ -90,6 +82,5 @@ class ConfigService extends GetxService {
     _socketUrl.value = _defaultSocketUrl;
     _useSocket.value = true;
     _socketAvailable.value = false;
-    print('🔄 Configuration réinitialisée');
   }
 }

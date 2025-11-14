@@ -59,18 +59,9 @@ class CompleteRamassageService {
         }
       }
 
-      print('🔍 Envoi de la requête de finalisation du ramassage $ramassageId');
-      print('🔍 Nombre de colis réel: $nombreColisReel');
-      print('🔍 Nombre de photos: ${photosPaths.length}');
-      print('🔍 Notes: $notesRamassage');
-      print('🔍 Raison différence: $raisonDifference');
-
       // Envoyer la requête
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
-
-      print('🔍 Status Code: ${response.statusCode}');
-      print('🔍 Response Body------>: ${response.body}');
 
       if (response.statusCode == 200) {
         try {
@@ -81,7 +72,6 @@ class CompleteRamassageService {
 
           return CompleteRamassageResponse(success: success, message: message);
         } catch (e) {
-          print('❌ Erreur lors du parsing de la réponse: $e');
           return CompleteRamassageResponse(
             success: false,
             message: 'Erreur lors du parsing de la réponse',
@@ -94,7 +84,6 @@ class CompleteRamassageService {
         );
       }
     } catch (e) {
-      print('❌ Erreur lors de la finalisation du ramassage: $e');
       return CompleteRamassageResponse(
         success: false,
         message: 'Erreur de connexion: $e',

@@ -33,7 +33,6 @@ class RamassageController extends GetxController {
 
   /// Forcer le chargement initial des ramassages
   Future<void> forceLoadRamassages() async {
-    print('🔍 forceLoadRamassages appelé');
     // Réinitialiser l'état d'erreur et forcer le chargement
     _errorMessage.value = '';
     await _loadRamassagesWithRetry();
@@ -41,7 +40,6 @@ class RamassageController extends GetxController {
 
   /// Charger les ramassages avec retry automatique
   Future<void> _loadRamassagesWithRetry() async {
-    print('🔍 _loadRamassagesWithRetry démarré');
     try {
       _isLoading.value = true;
       _errorMessage.value = '';
@@ -52,51 +50,31 @@ class RamassageController extends GetxController {
       // Récupérer le token depuis AuthController
       final authController = Get.find<AuthController>();
       final token = authController.authToken;
-      print('🔍 Token récupéré: ${token.isNotEmpty ? "OUI" : "NON"}');
 
       if (token.isEmpty) {
-        print('🔍 Token vide, attente de 500ms...');
         // Si pas de token, attendre un peu plus et réessayer
         await Future.delayed(const Duration(milliseconds: 500));
         final retryToken = authController.authToken;
-        print('🔍 Token après retry: ${retryToken.isNotEmpty ? "OUI" : "NON"}');
 
         if (retryToken.isEmpty) {
-          print('🔍 Token toujours vide, erreur');
           _errorMessage.value = 'Token d\'authentification manquant';
           return;
         }
 
-        print('🔍 Appel API avec token retry...');
         final response = await RamassageService.getRamassages(retryToken);
-        print(
-          '🔍 Réponse API: success=${response.success}, data=${response.data.length}',
-        );
         if (response.success) {
           _ramassages.value = response.data;
           _statistiques.value = response.statistiques;
-          print('🔍 Données mises à jour (retry), déclenchement du rebuild...');
-          print(
-            '🔍 Statistiques: ${response.statistiques?.colisTermines}/${response.statistiques?.total}',
-          );
           update(); // Forcer le rebuild de GetBuilder
         } else {
           _errorMessage.value = response.message;
           update(); // Forcer le rebuild même en cas d'erreur
         }
       } else {
-        print('🔍 Appel API avec token initial...');
         final response = await RamassageService.getRamassages(token);
-        print(
-          '🔍 Réponse API: success=${response.success}, data=${response.data.length}',
-        );
         if (response.success) {
           _ramassages.value = response.data;
           _statistiques.value = response.statistiques;
-          print('🔍 Données mises à jour, déclenchement du rebuild...');
-          print(
-            '🔍 Statistiques: ${response.statistiques?.colisTermines}/${response.statistiques?.total}',
-          );
           update(); // Forcer le rebuild de GetBuilder
         } else {
           _errorMessage.value = response.message;
@@ -104,11 +82,9 @@ class RamassageController extends GetxController {
         }
       }
     } catch (e) {
-      print('🔍 Erreur lors du chargement: $e');
       _errorMessage.value = e.toString();
       update(); // Forcer le rebuild même en cas d'erreur
     } finally {
-      print('🔍 Chargement terminé, isLoading=false');
       _isLoading.value = false;
       update(); // Forcer le rebuild pour mettre à jour l'état de loading
     }
@@ -205,8 +181,6 @@ class RamassageController extends GetxController {
   /// Démarrer un ramassage
   Future<bool> startRamassage(int ramassageId) async {
     try {
-      print('🔍 Démarrage du ramassage $ramassageId...');
-
       // Vérifier si l'utilisateur est connecté
       if (!isUserLoggedIn) {
         _errorMessage.value =
@@ -230,8 +204,6 @@ class RamassageController extends GetxController {
       );
 
       if (response.success) {
-        print('🔍 Ramassage démarré avec succès: ${response.message}');
-
         // Mettre à jour le statut du ramassage dans la liste locale
         _updateRamassageStatus(ramassageId, response.message);
 
@@ -239,12 +211,7 @@ class RamassageController extends GetxController {
         try {
           final locationController = Get.find<LocationController>();
           await locationController.startLocationTracking();
-          print(
-            '📍 Suivi de localisation démarré automatiquement pour le ramassage',
-          );
-        } catch (e) {
-          print('⚠️ Impossible de démarrer le suivi de localisation: $e');
-        }
+        } catch (e) {}
 
         return true;
       } else {
@@ -252,7 +219,6 @@ class RamassageController extends GetxController {
         return false;
       }
     } catch (e) {
-      print('🔍 Erreur lors du démarrage du ramassage: $e');
       _errorMessage.value = e.toString();
       return false;
     }
@@ -311,8 +277,6 @@ class RamassageController extends GetxController {
     required List<String> photosPaths,
   }) async {
     try {
-      print('🔍 Finalisation du ramassage $ramassageId...');
-
       // Vérifier si l'utilisateur est connecté
       if (!isUserLoggedIn) {
         _errorMessage.value =
@@ -340,8 +304,6 @@ class RamassageController extends GetxController {
       );
 
       if (response.success) {
-        print('🔍 Ramassage finalisé avec succès: ${response.message}');
-
         // Mettre à jour le statut du ramassage dans la liste locale
         _updateRamassageStatus(ramassageId, response.message);
 
@@ -349,12 +311,7 @@ class RamassageController extends GetxController {
         try {
           final locationController = Get.find<LocationController>();
           await locationController.stopLocationTracking();
-          print(
-            '📍 Suivi de localisation arrêté automatiquement après finalisation du ramassage',
-          );
-        } catch (e) {
-          print('⚠️ Impossible d\'arrêter le suivi de localisation: $e');
-        }
+        } catch (e) {}
 
         return true;
       } else {
@@ -362,7 +319,6 @@ class RamassageController extends GetxController {
         return false;
       }
     } catch (e) {
-      print('🔍 Erreur lors de la finalisation du ramassage: $e');
       _errorMessage.value = e.toString();
       return false;
     }
